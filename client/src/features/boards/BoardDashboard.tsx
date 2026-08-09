@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Spinner } from '../../components/ui/Spinner';
 import type { Board } from '../../lib/types';
+import { GlobalSearch } from '../search/GlobalSearch';
 import { useBoards, useCreateBoard } from './useBoards';
 
 export function BoardDashboard() {
@@ -30,13 +31,14 @@ export function BoardDashboard() {
 
   return (
     <div className="min-h-screen">
-      <header className="flex items-center justify-between border-b border-line bg-surface px-6 py-4">
+      <header className="flex items-center justify-between gap-4 border-b border-line bg-surface px-6 py-4">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-primary-400" />
           <h1 className="text-xl font-semibold tracking-tight text-ink">
             Kanban
           </h1>
         </div>
+        <GlobalSearch />
         <div className="flex items-center gap-3">
           <span className="text-sm text-ink-secondary">
             {user?.displayName ?? user?.email}

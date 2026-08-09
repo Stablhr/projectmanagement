@@ -5,6 +5,7 @@ import { LoginPage } from './auth/LoginPage';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { BoardView } from './features/board/BoardView';
 import { BoardDashboard } from './features/boards/BoardDashboard';
+import { SearchPage } from './features/search/SearchPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,6 +27,7 @@ export function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<BoardDashboard />} />
               <Route path="/board/:boardId" element={<BoardView />} />
+              <Route path="/search" element={<SearchPage />} />
             </Route>
             <Route path="*" element={<LoginPage />} />
           </Routes>

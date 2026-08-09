@@ -13,6 +13,7 @@ import { AvatarStack } from '../../components/ui/Avatar';
 import { Button } from '../../components/ui/Button';
 import { PlaceholderDialog } from '../../components/ui/PlaceholderDialog';
 import { useDeleteBoard } from '../boards/useBoards';
+import { GlobalSearch } from '../search/GlobalSearch';
 import { BoardMenu } from './BoardMenu';
 import { useBoardState } from './boardContext';
 import { FilterPanel } from './FilterPanel';
@@ -94,6 +95,8 @@ export function BoardHeader({ boardId, title }: { boardId: string; title: string
             </div>
           )}
         </div>
+
+        <GlobalSearch />
 
         <div className="flex items-center gap-1">
           <AvatarStack members={members} max={3} />
