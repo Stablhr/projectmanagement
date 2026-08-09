@@ -6,6 +6,8 @@ export function setTokenGetter(fn: () => Promise<string | null>) {
   tokenGetter = fn;
 }
 
+const apiBase = apiUrl.replace(/\/$/, '') + '/api/v1';
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -22,7 +24,7 @@ async function request(method: string, path: string, body?: unknown) {
   const token = await tokenGetter();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(apiUrl + path, {
+  const res = await fetch(apiBase + path, {
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
