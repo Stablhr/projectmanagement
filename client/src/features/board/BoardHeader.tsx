@@ -17,6 +17,9 @@ import { BoardMenu } from './BoardMenu';
 import { useBoardState } from './boardContext';
 import { FilterPanel } from './FilterPanel';
 import { LabelsManager } from './LabelsManager';
+import { ShareBoardModal } from './ShareBoardModal';
+import { VisibilityModal } from './VisibilityModal';
+import { ViewSwitcher } from './ViewSwitcher';
 import { useRenameBoard } from './useBoard';
 
 export function BoardHeader({ boardId, title }: { boardId: string; title: string }) {
@@ -75,7 +78,7 @@ export function BoardHeader({ boardId, title }: { boardId: string; title: string
               className="w-full max-w-sm rounded-lg border border-primary-500 bg-surface px-3 py-1.5 text-lg font-semibold text-ink focus:outline-none focus:ring-2 focus:ring-primary-500/30"
             />
           ) : (
-            <div className="group flex items-center gap-2">
+            <div className="group flex items-center gap-1.5">
               <h1 className="text-lg font-semibold tracking-tight text-ink">{title}</h1>
               <button
                 onClick={() => {
@@ -87,6 +90,7 @@ export function BoardHeader({ boardId, title }: { boardId: string; title: string
               >
                 <Pencil className="h-4 w-4" />
               </button>
+              <ViewSwitcher />
             </div>
           )}
         </div>
@@ -174,22 +178,8 @@ export function BoardHeader({ boardId, title }: { boardId: string; title: string
       />
       <LabelsManager open={labelsOpen} onClose={() => setLabelsOpen(false)} />
 
-      {shareOpen && (
-        <PlaceholderDialog
-          open
-          onClose={() => setShareOpen(false)}
-          title="Share board"
-          hint="The full share experience lands next: invite by email, role dropdowns, and invite links."
-        />
-      )}
-      {visibilityOpen && (
-        <PlaceholderDialog
-          open
-          onClose={() => setVisibilityOpen(false)}
-          title="Board visibility"
-          hint="Private / Workspace / Organization / Public options are coming next."
-        />
-      )}
+      {shareOpen && <ShareBoardModal open onClose={() => setShareOpen(false)} />}
+      {visibilityOpen && <VisibilityModal open onClose={() => setVisibilityOpen(false)} />}
       {powerUpsOpen && (
         <PlaceholderDialog
           open

@@ -27,6 +27,7 @@ import { List } from './List';
 import { listOrder, moveCardInCache, reorderListsInCache } from './reorderUtils';
 import { useBoard, useReorderCards } from './useBoard';
 import { useBoardSocket } from './useBoardSocket';
+import { CalendarView, ViewPlaceholder } from './ViewPlaceholder';
 
 interface DragState {
   type: 'card' | 'list';
@@ -78,7 +79,7 @@ export function BoardView() {
 
 function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail }) {
   const queryClient = useQueryClient();
-  const { visibleBoard, meta, members, labels, filters, isFiltering } = useBoardState();
+  const { visibleBoard, meta, members, labels, filters, isFiltering, view } = useBoardState();
   const createList = useCreateList(boardId);
   const reorderLists = useReorderLists(boardId);
   const reorderCards = useReorderCards(boardId);
@@ -211,14 +212,15 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
     <div className="flex h-screen flex-col">
       <BoardHeader boardId={board.board._id} title={board.board.title} />
 
-      <div
-        className="flex-1 overflow-x-auto overflow-y-hidden px-4 py-4"
-        style={
-          meta.background.type === 'color'
-            ? { backgroundColor: meta.background.value }
-            : { backgroundImage: meta.background.value, backgroundSize: 'cover' }
-        }
-      >
+      {view === 'board' ? (
+        <div
+          className="flex-1 overflow-x-auto overflow-y-hidden px-4 py-4"
+          style={
+            meta.background.type === 'color'
+              ? { backgroundColor: meta.background.value }
+              : { backgroundImage: meta.background.value, backgroundSize: 'cover' }
+          }
+        >
         {isFiltering && (
           <div className="mb-3 flex items-center gap-2 text-sm text-ink-secondary">
             <span className="inline-block h-2 w-2 rounded-full bg-primary-500" />
@@ -295,7 +297,23 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
             />
           </div>
         )}
-      </div>
+        </div>
+      ) : (
+        <div
+          className="flex-1 overflow-y-auto"
+          style={
+            meta.background.type === 'color'
+              ? { backgroundColor: meta.background.value }
+              : { backgroundImage: meta.background.value, backgroundSize: 'cover' }
+          }
+        >
+          {view === 'calendar' ? (
+            <CalendarView />
+          ) : (
+            <ViewPlaceholder view={view} />
+          )}
+        </div>
+      )}
 
       {openCard && (
         <CardModal
