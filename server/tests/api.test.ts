@@ -1,8 +1,27 @@
 import { createRequire } from 'node:module';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { app } from '../src/app';
+
+vi.mock('firebase-admin', () => {
+  const verifyIdToken = vi.fn(async (token: string) => ({
+    uid: token,
+    email: `${token}@dev.local`,
+    name: token,
+  }));
+  const appLike = { auth: () => ({ verifyIdToken }) };
+  return {
+    __esModule: true,
+    default: {
+      credential: {
+        cert: vi.fn(() => 'cert'),
+        applicationDefault: vi.fn(() => 'default'),
+      },
+      initializeApp: vi.fn(() => appLike),
+    },
+  };
+});
 
 const request = createRequire(import.meta.url)('supertest');
 
