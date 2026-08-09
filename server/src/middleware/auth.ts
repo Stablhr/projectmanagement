@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import admin from 'firebase-admin';
+import fs from 'node:fs';
 import { env, isFirebaseConfigured } from '../config/env';
 import { errorBody, unauthorizedError } from '../utils/http';
 
@@ -26,9 +27,7 @@ function getAdmin(): admin.app.App {
         'Firebase Admin is not configured (set FIREBASE_PROJECT_ID / FIREBASE_SERVICE_ACCOUNT_JSON)',
       );
     }
-    const serviceAccount = env.firebaseServiceAccountJson
-      ? (JSON.parse(env.firebaseServiceAccountJson) as admin.ServiceAccount)
-      : undefined;
+    const serviceAccount = loadServiceAccount();
     adminApp = admin.initializeApp({
       credential: serviceAccount
         ? admin.credential.cert(serviceAccount)
@@ -37,6 +36,17 @@ function getAdmin(): admin.app.App {
     });
   }
   return adminApp;
+}
+
+function loadServiceAccount(): admin.ServiceAccount | undefined {
+  if (!env.firebaseServiceAccountJson) return undefined;
+  if (env.firebaseServiceAccountJson.trim().startsWith('{')) {
+    return JSON.parse(env.firebaseServiceAccountJson) as admin.ServiceAccount;
+  }
+  // Treated as a path to a service-account JSON file.
+  return JSON.parse(
+    fs.readFileSync(env.firebaseServiceAccountJson, 'utf8'),
+  ) as admin.ServiceAccount;
 }
 
 /** True when the server should trust raw tokens (dev only, Firebase not configured). */

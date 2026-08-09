@@ -19,6 +19,15 @@ app.use(
 );
 app.use(express.json());
 
+app.get('/health', (_req: Request, res: Response) => {
+  const dbState = mongoose.connection.readyState;
+  res.status(200).json({
+    status: 'ok',
+    db: dbState === 1 ? 'connected' : 'disconnected',
+    uptime: Math.floor(process.uptime()),
+  });
+});
+
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/boards', boardsRoutes);
 app.use('/api/v1', listsRoutes);

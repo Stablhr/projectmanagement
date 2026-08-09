@@ -1,8 +1,8 @@
 import { apiUrl } from './env';
 
-let tokenGetter: () => string | null = () => null;
+let tokenGetter: () => Promise<string | null> = async () => null;
 
-export function setTokenGetter(fn: () => string | null) {
+export function setTokenGetter(fn: () => Promise<string | null>) {
   tokenGetter = fn;
 }
 
@@ -19,7 +19,7 @@ export class ApiError extends Error {
 
 async function request(method: string, path: string, body?: unknown) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  const token = tokenGetter();
+  const token = await tokenGetter();
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const res = await fetch(apiUrl + path, {

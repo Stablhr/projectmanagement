@@ -35,6 +35,15 @@ afterAll(async () => {
   await mongod.stop();
 });
 
+describe('GET /health', () => {
+  it('reports ok without auth', async () => {
+    const res = await request(app).get('/health');
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('ok');
+    expect(res.body.db).toBe('connected');
+  });
+});
+
 beforeEach(async () => {
   await mongoose.connection.dropDatabase();
 });

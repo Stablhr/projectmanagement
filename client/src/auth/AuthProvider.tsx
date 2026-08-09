@@ -16,10 +16,10 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { api } from '../lib/api';
+import { api, setTokenGetter } from '../lib/api';
 import { auth } from '../lib/firebase';
 import { isFirebaseConfigured, useDevAuth } from '../lib/env';
-import { setAuthTokenGetter } from '../lib/socket';
+import { getAuthToken } from '../lib/token';
 
 export interface AuthUser {
   uid: string;
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(!useDevAuth);
 
-  setAuthTokenGetter(() => user?.uid ?? null);
+  setTokenGetter(getAuthToken);
 
   const syncUser = useCallback(async (u: AuthUser) => {
     try {
