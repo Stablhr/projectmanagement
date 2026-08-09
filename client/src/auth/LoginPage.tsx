@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
-import { useDevAuth } from '../lib/env';
+import { isOwnerEmail, useDevAuth } from '../lib/env';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 
@@ -18,6 +18,9 @@ export function LoginPage() {
     ?.pathname ?? '/';
 
   if (user) return <Navigate to={from} replace />;
+
+  const notAllowedEmail =
+    mode === 'signup' && email.length > 0 && !isOwnerEmail(email);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -71,8 +74,14 @@ export function LoginPage() {
           />
 
           {error && <p className="text-sm text-danger">{error}</p>}
+          {notAllowedEmail && (
+            <p className="text-sm text-danger">
+              Sign-up is invite-only. Only the owner email can create an
+              account.
+            </p>
+          )}
 
-          <Button type="submit" fullWidth disabled={submitting}>
+          <Button type="submit" fullWidth disabled={submitting || notAllowedEmail}>
             {submitting
               ? 'Please wait…'
               : mode === 'signin'

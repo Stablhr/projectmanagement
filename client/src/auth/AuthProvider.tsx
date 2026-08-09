@@ -18,7 +18,7 @@ import {
 } from 'react';
 import { api, setTokenGetter } from '../lib/api';
 import { auth } from '../lib/firebase';
-import { isFirebaseConfigured, useDevAuth } from '../lib/env';
+import { isFirebaseConfigured, isOwnerEmail, useDevAuth } from '../lib/env';
 import { getAuthToken } from '../lib/token';
 
 export interface AuthUser {
@@ -67,7 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (!auth) return;
       if (fbUser) {
+        if (!isOwnerEmail(fbUser.email)) {
+          await firebaseSignOut(auth);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
         const nextUser = {
           uid: fbUser.uid,
           email: fbUser.email,
@@ -101,17 +108,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     if (requireFirebase()) return;
+    if (!isOwnerEmail(email)) {
+      throw new Error('This account is not authorized to sign in.');
+    }
     await signInWithEmailAndPassword(auth!, email, password);
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {
     if (requireFirebase()) return;
+    if (!isOwnerEmail(email)) {
+      throw new Error('Sign-up is invite-only. This email is not allowed.');
+    }
     await createUserWithEmailAndPassword(auth!, email, password);
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
     if (requireFirebase()) return;
-    await signInWithPopup(auth!, new GoogleAuthProvider());
+    const result = await signInWithPopup(auth!, new GoogleAuthProvider());
+    if (!isOwnerEmail(result.user.email)) {
+      await firebaseSignOut(auth!);
+      throw new Error('This Google account is not authorized.');
+    }
   }, []);
 
   const signOut = useCallback(async () => {

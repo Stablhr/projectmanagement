@@ -11,6 +11,11 @@ export const env = {
   firebaseServiceAccountJson: process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '',
   devAuth: process.env.DEV_AUTH === 'true',
   nodeEnv: process.env.NODE_ENV || 'development',
+  // Comma-separated list of emails allowed to sign in. Empty = allow everyone.
+  ownerEmails: (process.env.OWNER_EMAILS || '')
+    .split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean),
 };
 
 export function isFirebaseConfigured() {

@@ -41,6 +41,7 @@ function authed(token: string) {
 
 const alice = authed('alice');
 const bob = authed('bob');
+const mallory = authed('mallory');
 
 let mongod: MongoMemoryServer;
 
@@ -82,6 +83,10 @@ describe('auth', () => {
       .send({ email: 'alice@dev.local' })
       .expect(200);
     expect(res.body.firebaseUid).toBe('alice');
+  });
+
+  it('rejects tokens from non-owner emails', async () => {
+    await mallory.get('/api/v1/boards').expect(403);
   });
 });
 

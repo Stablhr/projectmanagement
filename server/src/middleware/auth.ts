@@ -54,6 +54,13 @@ function isDevAuth() {
   return !isFirebaseConfigured() && env.devAuth;
 }
 
+/** Only the owner email(s) may use the app. Empty allowlist = open access. */
+function isOwnerEmail(email: string | null | undefined): boolean {
+  if (env.ownerEmails.length === 0) return true;
+  if (!email) return false;
+  return env.ownerEmails.includes(email.trim().toLowerCase());
+}
+
 /**
  * Verify a Firebase ID token and return the user's firebase uid.
  * In dev mode (DEV_AUTH=true, no Firebase config) the raw token is trusted
@@ -64,6 +71,9 @@ export async function verifyToken(token: string): Promise<string> {
     return token || 'dev-user';
   }
   const decoded = await getAdmin().auth().verifyIdToken(token);
+  if (!isOwnerEmail(decoded.email)) {
+    throw new Error('Account not authorized');
+  }
   return decoded.uid;
 }
 
@@ -84,6 +94,12 @@ export async function auth(req: Request, res: Response, next: NextFunction) {
       };
     } else {
       const decoded = await getAdmin().auth().verifyIdToken(token);
+      if (!isOwnerEmail(decoded.email)) {
+        res
+          .status(403)
+          .json(errorBody('FORBIDDEN', 'Account not authorized'));
+        return;
+      }
       req.user = {
         firebaseUid: decoded.uid,
         email: decoded.email ?? null,
