@@ -104,15 +104,20 @@ function pseudoInt(input: string, range: number): number {
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 
-function deterministicDueDate(input: string): string | null {
+function deterministicDueDate(input: string, now: number = Date.now()): string | null {
   const roll = pseudoInt(input, 100);
   if (roll < 45) return null;
   const offsets = [-5 * DAY, -3 * DAY, -1 * DAY, -12 * HOUR, -6 * HOUR, 6 * HOUR, 1 * DAY, 2 * DAY, 5 * DAY, 12 * DAY];
   const offset = offsets[pseudoInt(input, offsets.length)];
-  return new Date(Date.now() + offset).toISOString();
+  return new Date(now + offset).toISOString();
 }
 
-export function enrichCard(card: Card, members: MemberProfile[], labels: BoardLabel[]): Card {
+export function enrichCard(
+  card: Card,
+  members: MemberProfile[],
+  labels: BoardLabel[],
+  now?: number,
+): Card {
   const h = hashOf(card._id);
 
   const coverRoll = h % 10;
@@ -143,7 +148,7 @@ export function enrichCard(card: Card, members: MemberProfile[], labels: BoardLa
     ...card,
     cover,
     labels: cardLabels,
-    dueDate: deterministicDueDate(card._id),
+    dueDate: deterministicDueDate(card._id, now),
     commentCount: h % 3 === 0 ? 0 : h % 8,
     attachmentCount: h % 5 === 0 ? 0 : h % 5,
     watched: h % 7 === 0,
@@ -156,12 +161,12 @@ export function enrichList(list: List, members: MemberProfile[]): List {
   return { ...list, assigneeId: members[pseudoInt(list._id, members.length)]?.id };
 }
 
-export function enrichBoardDetail(board: BoardDetail): BoardDetail {
+export function enrichBoardDetail(board: BoardDetail, now?: number): BoardDetail {
   const members = boardMembers(board.board._id);
   const labels = boardLabels(board.board._id);
   return {
     ...board,
     lists: board.lists.map((l) => enrichList(l, members)),
-    cards: board.cards.map((c) => enrichCard(c, members, labels)),
+    cards: board.cards.map((c) => enrichCard(c, members, labels, now)),
   };
 }

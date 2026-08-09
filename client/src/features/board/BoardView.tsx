@@ -22,7 +22,6 @@ import { ME_ID } from './boardData';
 import { BoardStateProvider, useBoardState } from './boardContext';
 import { BoardHeader } from './BoardHeader';
 import { CardModal } from './CardModal';
-import { FilterPanel } from './FilterPanel';
 import { filterCards } from './filterBoard';
 import { List } from './List';
 import { listOrder, moveCardInCache, reorderListsInCache } from './reorderUtils';
@@ -89,7 +88,6 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
   const [openCard, setOpenCard] = useState<CardType | null>(null);
   const [addingList, setAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
-  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -211,11 +209,7 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
 
   return (
     <div className="flex h-screen flex-col">
-      <BoardHeader
-        boardId={board.board._id}
-        title={board.board.title}
-        onOpenFilters={() => setFiltersOpen(true)}
-      />
+      <BoardHeader boardId={board.board._id} title={board.board.title} />
 
       <div
         className="flex-1 overflow-x-auto overflow-y-hidden px-4 py-4"
@@ -310,8 +304,6 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
           onClose={() => setOpenCard(null)}
         />
       )}
-
-      <FilterPanel open={filtersOpen} onClose={() => setFiltersOpen(false)} />
     </div>
   );
 }

@@ -62,6 +62,7 @@ export interface BoardMeta {
   description: string;
   visibility: BoardVisibility;
   starred: boolean;
+  watch: boolean;
   background: { type: 'color' | 'image'; value: string };
 }
 

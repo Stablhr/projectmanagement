@@ -39,6 +39,7 @@ const DEFAULT_META: BoardMeta = {
   description: '',
   visibility: 'workspace',
   starred: false,
+  watch: false,
   background: { type: 'color', value: '#F7FAF9' },
 };
 

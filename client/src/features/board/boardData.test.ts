@@ -35,8 +35,8 @@ describe('boardData enrichment', () => {
   });
 
   it('is deterministic for the same input', () => {
-    const a = enrichBoardDetail(makeBoard());
-    const b = enrichBoardDetail(makeBoard());
+    const a = enrichBoardDetail(makeBoard(), 1_700_000_000_000);
+    const b = enrichBoardDetail(makeBoard(), 1_700_000_000_000);
     expect(a.cards).toEqual(b.cards);
     expect(a.lists).toEqual(b.lists);
   });
