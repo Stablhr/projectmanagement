@@ -1,14 +1,24 @@
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Filter, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { useDeleteBoard } from '../boards/useBoards';
+import { useBoardState } from './boardContext';
 import { useRenameBoard } from './useBoard';
 
-export function BoardHeader({ boardId, title }: { boardId: string; title: string }) {
+export function BoardHeader({
+  boardId,
+  title,
+  onOpenFilters,
+}: {
+  boardId: string;
+  title: string;
+  onOpenFilters: () => void;
+}) {
   const navigate = useNavigate();
   const rename = useRenameBoard(boardId);
   const del = useDeleteBoard();
+  const { isFiltering } = useBoardState();
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(title);
@@ -53,9 +63,7 @@ export function BoardHeader({ boardId, title }: { boardId: string; title: string
           />
         ) : (
           <div className="group flex items-center gap-2">
-            <h1 className="text-lg font-semibold tracking-tight text-ink">
-              {title}
-            </h1>
+            <h1 className="text-lg font-semibold tracking-tight text-ink">{title}</h1>
             <button
               onClick={() => {
                 setDraft(title);
@@ -70,9 +78,22 @@ export function BoardHeader({ boardId, title }: { boardId: string; title: string
         )}
       </div>
 
-      <Button variant="ghost" onClick={remove} aria-label="Delete board">
-        <Trash2 className="h-4 w-4 text-danger" />
-      </Button>
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={onOpenFilters}
+          className={`rounded-lg p-2 text-ink-secondary hover:bg-canvas ${
+            isFiltering ? 'bg-primary-200/60 text-primary-800' : ''
+          }`}
+          aria-label="Filter cards"
+          title={isFiltering ? 'Filters active' : 'Filter'}
+        >
+          <Filter className="h-4 w-4" />
+        </button>
+
+        <Button variant="ghost" onClick={remove} aria-label="Delete board">
+          <Trash2 className="h-4 w-4 text-danger" />
+        </Button>
+      </div>
     </header>
   );
 }

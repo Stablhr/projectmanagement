@@ -18,9 +18,12 @@ import { Spinner } from '../../components/ui/Spinner';
 import type { BoardDetail, Card as CardType } from '../../lib/types';
 import { useCreateList, useReorderLists } from '../lists/useLists';
 import { enrichBoardDetail } from './boardData';
+import { ME_ID } from './boardData';
 import { BoardStateProvider, useBoardState } from './boardContext';
 import { BoardHeader } from './BoardHeader';
 import { CardModal } from './CardModal';
+import { FilterPanel } from './FilterPanel';
+import { filterCards } from './filterBoard';
 import { List } from './List';
 import { listOrder, moveCardInCache, reorderListsInCache } from './reorderUtils';
 import { useBoard, useReorderCards } from './useBoard';
@@ -76,7 +79,7 @@ export function BoardView() {
 
 function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail }) {
   const queryClient = useQueryClient();
-  const { visibleBoard, meta } = useBoardState();
+  const { visibleBoard, meta, members, labels, filters, isFiltering } = useBoardState();
   const createList = useCreateList(boardId);
   const reorderLists = useReorderLists(boardId);
   const reorderCards = useReorderCards(boardId);
@@ -86,6 +89,7 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
   const [openCard, setOpenCard] = useState<CardType | null>(null);
   const [addingList, setAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -95,15 +99,21 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
 
   const lists = visibleBoard.lists;
 
+  const filterCtx = useMemo(
+    () => ({ members, labels, meId: ME_ID }),
+    [members, labels],
+  );
+
   const cardsByList = useMemo(() => {
     const map: Record<string, CardType[]> = {};
     for (const list of lists) {
-      map[list._id] = visibleBoard.cards
+      const inList = visibleBoard.cards
         .filter((c) => c.listId === list._id)
         .sort((a, b) => a.position - b.position);
+      map[list._id] = filterCards(inList, filters, filterCtx);
     }
     return map;
-  }, [visibleBoard.cards, lists]);
+  }, [visibleBoard.cards, lists, filters, filterCtx]);
 
   function readBoard() {
     return queryClient.getQueryData<BoardDetail>(['board', boardId]) ?? board;
@@ -201,7 +211,11 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
 
   return (
     <div className="flex h-screen flex-col">
-      <BoardHeader boardId={board.board._id} title={board.board.title} />
+      <BoardHeader
+        boardId={board.board._id}
+        title={board.board.title}
+        onOpenFilters={() => setFiltersOpen(true)}
+      />
 
       <div
         className="flex-1 overflow-x-auto overflow-y-hidden px-4 py-4"
@@ -211,6 +225,13 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
             : { backgroundImage: meta.background.value, backgroundSize: 'cover' }
         }
       >
+        {isFiltering && (
+          <div className="mb-3 flex items-center gap-2 text-sm text-ink-secondary">
+            <span className="inline-block h-2 w-2 rounded-full bg-primary-500" />
+            Filters are active
+          </div>
+        )}
+
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
@@ -289,6 +310,8 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
           onClose={() => setOpenCard(null)}
         />
       )}
+
+      <FilterPanel open={filtersOpen} onClose={() => setFiltersOpen(false)} />
     </div>
   );
 }
