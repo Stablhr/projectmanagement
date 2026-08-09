@@ -1,3 +1,4 @@
+import { clsx } from 'clsx';
 import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 
@@ -5,10 +6,11 @@ interface ModalProps {
   open: boolean;
   onClose: () => void;
   title?: string;
+  size?: 'md' | 'lg';
   children: ReactNode;
 }
 
-export function Modal({ open, onClose, title, children }: ModalProps) {
+export function Modal({ open, onClose, title, size = 'md', children }: ModalProps) {
   if (!open) return null;
 
   return (
@@ -21,7 +23,10 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       <div
         role="dialog"
         aria-modal="true"
-        className="w-full max-w-md rounded-xl border border-line bg-surface shadow-xl"
+        className={clsx(
+          'w-full rounded-2xl border border-line bg-surface shadow-lg',
+          size === 'lg' ? 'max-w-2xl' : 'max-w-md',
+        )}
       >
         <div className="flex items-center justify-between border-b border-line px-5 py-3">
           {title && <h2 className="text-base font-semibold text-ink">{title}</h2>}

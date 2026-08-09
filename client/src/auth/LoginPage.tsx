@@ -41,10 +41,12 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
-      <div className="w-full max-w-sm rounded-xl border border-line bg-surface p-8 shadow-sm">
-        <div className="mb-6 flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary-400" />
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">
+      <div className="w-full max-w-sm rounded-2xl border border-line bg-surface p-8 shadow-md">
+        <div className="mb-6 flex flex-col items-center gap-3">
+          <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-primary-500 to-accent">
+            <div className="absolute inset-[11px] rounded-md bg-surface opacity-90" />
+          </div>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-ink">
             {useDevAuth ? 'SchedFlow (dev mode)' : 'SchedFlow'}
           </h1>
         </div>

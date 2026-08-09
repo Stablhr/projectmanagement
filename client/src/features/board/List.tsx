@@ -162,7 +162,7 @@ export function List({ boardId, list, cards, onOpenCard }: ListProps) {
       style={{ transform: CSS.Transform.toString(transform), transition }}
       data-list-id={list._id}
       className={clsx(
-        'flex max-h-full w-72 shrink-0 flex-col rounded-xl bg-canvas border border-line',
+        'flex max-h-full w-72 shrink-0 flex-col rounded-xl border border-line/70 bg-surface-alt/60 backdrop-blur',
         isDragging ? 'z-10 shadow-lg ring-2 ring-primary-400' : '',
       )}
     >

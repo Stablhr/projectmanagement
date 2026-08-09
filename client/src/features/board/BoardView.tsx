@@ -56,7 +56,7 @@ export function BoardView() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <Spinner label="Loading board…" />
       </div>
     );
@@ -64,7 +64,7 @@ export function BoardView() {
 
   if (isError || !enriched) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <p className="text-danger">Could not load this board.</p>
       </div>
     );
@@ -209,7 +209,7 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
   }
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <BoardHeader boardId={board.board._id} title={board.board.title} />
 
       {view === 'board' ? (

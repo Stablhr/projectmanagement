@@ -1,7 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../auth/AuthProvider';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Spinner } from '../../components/ui/Spinner';
@@ -10,7 +9,6 @@ import { GlobalSearch } from '../search/GlobalSearch';
 import { useBoards, useCreateBoard, useDeleteBoard } from './useBoards';
 
 export function BoardDashboard() {
-  const { user, signOut } = useAuth();
   const { data: boards, isLoading, isError } = useBoards();
   const createBoard = useCreateBoard();
   const deleteBoard = useDeleteBoard();
@@ -31,37 +29,24 @@ export function BoardDashboard() {
   }
 
   return (
-    <div className="min-h-screen">
-      <header className="flex items-center justify-between gap-4 border-b border-line bg-surface px-6 py-4">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary-400" />
-          <h1 className="text-xl font-semibold tracking-tight text-ink">
-            SchedFlow
-          </h1>
-        </div>
-        <GlobalSearch />
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-ink-secondary">
-            {user?.displayName ?? user?.email}
-          </span>
-          <button
-            onClick={signOut}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium text-ink-secondary hover:bg-canvas"
-          >
-            Sign out
-          </button>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-5xl px-6 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-semibold tracking-tight text-ink">
-            Your boards
-          </h2>
-          <Button onClick={() => setAdding(true)}>
-            <Plus className="h-4 w-4" />
-            New board
-          </Button>
+    <div className="min-h-full">
+      <main className="mx-auto max-w-6xl px-6 py-8">
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
+              Your boards
+            </h1>
+            <p className="mt-1 text-sm text-ink-secondary">
+              Everything you're tracking, in one place.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <GlobalSearch />
+            <Button onClick={() => setAdding(true)}>
+              <Plus className="h-4 w-4" />
+              New board
+            </Button>
+          </div>
         </div>
 
         {adding && (
@@ -121,12 +106,12 @@ function BoardCard({ board, onDelete }: { board: Board; onDelete: () => void }) 
 
   return (
     <div className="group relative overflow-hidden rounded-xl border border-line bg-surface shadow-sm transition-shadow hover:shadow-md">
-      <div className="absolute inset-x-0 top-0 h-1 bg-primary-400" />
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 to-accent" />
       <Link to={`/board/${board._id}`} className="block p-5">
-        <h3 className="font-semibold text-ink group-hover:text-primary-800">
+        <h3 className="font-display text-lg font-semibold text-ink group-hover:text-primary-700">
           {board.title}
         </h3>
-        <p className="mt-2 text-xs text-ink-secondary">
+        <p className="mt-1 font-mono text-xs text-ink-secondary">
           {board.members.length} member{board.members.length === 1 ? '' : 's'}
         </p>
       </Link>

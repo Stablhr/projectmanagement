@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useBoards } from '../boards/useBoards';
 import type { Board, BoardDetail } from '../../lib/types';
 
-const SWATCHES = ['#0F4C45', '#2563EB', '#B45309', '#7C3AED', '#DC2626', '#1F9D6B', '#00C2E0'];
+const SWATCHES = ['#5B5FEF', '#FF8B5E', '#33B27A', '#F6C453', '#8B8DF4', '#FF5E6C', '#6E6B84'];
 
 function swatchFor(value: string): string {
   let h = 0;

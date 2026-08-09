@@ -81,7 +81,7 @@ export function BoardHeader({ boardId, title }: { boardId: string; title: string
             />
           ) : (
             <div className="group flex items-center gap-1.5">
-              <h1 className="text-lg font-semibold tracking-tight text-ink">{title}</h1>
+              <h1 className="font-display text-xl font-semibold tracking-tight text-ink">{title}</h1>
               <button
                 onClick={() => {
                   setDraft(title);

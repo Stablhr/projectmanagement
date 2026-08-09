@@ -3,9 +3,11 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthProvider';
 import { LoginPage } from './auth/LoginPage';
 import { ProtectedRoute } from './auth/ProtectedRoute';
+import { AppShell } from './components/layout/AppShell';
 import { BoardView } from './features/board/BoardView';
 import { BoardDashboard } from './features/boards/BoardDashboard';
 import { SearchPage } from './features/search/SearchPage';
+import { SidebarViewPlaceholder } from './features/sidebar/SidebarViewPlaceholder';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,9 +27,13 @@ export function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<BoardDashboard />} />
-              <Route path="/board/:boardId" element={<BoardView />} />
-              <Route path="/search" element={<SearchPage />} />
+              <Route element={<AppShell />}>
+                <Route path="/" element={<BoardDashboard />} />
+                <Route path="/board/:boardId" element={<BoardView />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/planner" element={<SidebarViewPlaceholder view="planner" />} />
+                <Route path="/inbox" element={<SidebarViewPlaceholder view="inbox" />} />
+              </Route>
             </Route>
             <Route path="*" element={<LoginPage />} />
           </Routes>

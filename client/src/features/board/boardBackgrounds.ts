@@ -8,17 +8,22 @@ export interface BoardBackground {
 export const BOARD_BACKGROUNDS: BoardBackground[] = [
   { id: 'bg-ink', name: 'Slate', type: 'color', value: '#2B3A45' },
   { id: 'bg-navy', name: 'Navy', type: 'color', value: '#274555' },
-  { id: 'bg-turquoise', name: 'Turquoise', type: 'color', value: '#3AA7A0' },
-  { id: 'bg-green', name: 'Green', type: 'color', value: '#4B9A6D' },
-  { id: 'bg-lilac', name: 'Lilac', type: 'color', value: '#8F7BB8' },
-  { id: 'bg-coral', name: 'Coral', type: 'color', value: '#D97A6A' },
+  { id: 'bg-lilac', name: 'Lilac', type: 'color', value: '#8B8DF4' },
+  { id: 'bg-purple', name: 'Purple', type: 'color', value: '#4347C4' },
+  { id: 'bg-coral', name: 'Coral', type: 'color', value: '#FF8B5E' },
   { id: 'bg-sand', name: 'Sand', type: 'color', value: '#D6B57A' },
   { id: 'bg-charcoal', name: 'Charcoal', type: 'color', value: '#3D3F45' },
+  {
+    id: 'bg-dusk',
+    name: 'Dusk',
+    type: 'image',
+    value: 'linear-gradient(135deg, #5B5FEF, #8B8DF4)',
+  },
   {
     id: 'bg-sunset',
     name: 'Sunset',
     type: 'image',
-    value: 'linear-gradient(135deg, #FF9A8B, #FF6A88, #FF99AC)',
+    value: 'linear-gradient(135deg, #FF8B5E, #FF99AC)',
   },
   {
     id: 'bg-ocean',
@@ -30,13 +35,7 @@ export const BOARD_BACKGROUNDS: BoardBackground[] = [
     id: 'bg-forest',
     name: 'Forest',
     type: 'image',
-    value: 'linear-gradient(135deg, #134E5E, #71B280)',
-  },
-  {
-    id: 'bg-dusk',
-    name: 'Dusk',
-    type: 'image',
-    value: 'linear-gradient(135deg, #4E54C8, #8F94FB)',
+    value: 'linear-gradient(135deg, #33B27A, #71B280)',
   },
 ];
 

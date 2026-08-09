@@ -1,3 +1,4 @@
+import { clsx } from 'clsx';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../../components/ui/Button';
@@ -37,16 +38,33 @@ export function CardModal({ boardId, card, onClose }: CardModalProps) {
   }
 
   return (
-    <Modal open onClose={onClose}>
+    <Modal open onClose={onClose} size="lg">
+      {card.cover && (
+        <div
+          className="-mt-4 h-28 w-full rounded-t-2xl"
+          style={
+            card.cover.type === 'color'
+              ? { backgroundColor: card.cover.value }
+              : {
+                  backgroundImage: card.cover.value,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }
+          }
+        />
+      )}
       <input
         autoFocus
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onBlur={saveTitle}
         onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-        className="w-full rounded-lg border border-transparent px-1 py-0.5 text-lg font-semibold text-ink hover:border-line focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+        className={clsx(
+          'w-full rounded-lg border border-transparent bg-transparent font-display text-xl font-semibold text-ink hover:border-line focus:border-primary-500 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary-500/30',
+          card.cover ? 'mt-4' : '',
+        )}
       />
-      <p className="mt-1 text-xs text-ink-secondary">
+      <p className="mt-1 font-mono text-xs text-ink-secondary">
         in list {card.listId.slice(-6)}
       </p>
 
