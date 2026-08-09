@@ -17,6 +17,8 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { Spinner } from '../../components/ui/Spinner';
 import type { BoardDetail, Card as CardType } from '../../lib/types';
 import { useCreateList, useReorderLists } from '../lists/useLists';
+import { enrichBoardDetail } from './boardData';
+import { BoardStateProvider } from './boardContext';
 import { BoardHeader } from './BoardHeader';
 import { CardModal } from './CardModal';
 import { List } from './List';
@@ -42,8 +44,38 @@ function computeListOrder(lists: BoardDetail['lists'], activeId: string, overId:
 
 export function BoardView() {
   const { boardId = '' } = useParams();
-  const queryClient = useQueryClient();
   const { data, isLoading, isError } = useBoard(boardId);
+
+  const enriched = useMemo(
+    () => (data ? enrichBoardDetail(data) : undefined),
+    [data],
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Spinner label="Loading board…" />
+      </div>
+    );
+  }
+
+  if (isError || !enriched) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-danger">Could not load this board.</p>
+      </div>
+    );
+  }
+
+  return (
+    <BoardStateProvider board={enriched}>
+      <BoardShell key={boardId} boardId={boardId} board={enriched} />
+    </BoardStateProvider>
+  );
+}
+
+function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail }) {
+  const queryClient = useQueryClient();
   const createList = useCreateList(boardId);
   const reorderLists = useReorderLists(boardId);
   const reorderCards = useReorderCards(boardId);
@@ -60,22 +92,20 @@ export function BoardView() {
 
   useBoardSocket(boardId);
 
-  const board = data?.board;
-  const lists = data?.lists ?? [];
+  const lists = board.lists;
 
   const cardsByList = useMemo(() => {
-    if (!data) return {};
     const map: Record<string, CardType[]> = {};
     for (const list of lists) {
-      map[list._id] = data.cards
+      map[list._id] = board.cards
         .filter((c) => c.listId === list._id)
         .sort((a, b) => a.position - b.position);
     }
     return map;
-  }, [data, lists]);
+  }, [board.cards, lists]);
 
   function readBoard() {
-    return queryClient.getQueryData<BoardDetail>(['board', boardId]) ?? data;
+    return queryClient.getQueryData<BoardDetail>(['board', boardId]) ?? board;
   }
 
   function onDragStart(event: DragStartEvent) {
@@ -168,25 +198,9 @@ export function BoardView() {
     setAddingList(false);
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Spinner label="Loading board…" />
-      </div>
-    );
-  }
-
-  if (isError || !board) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-danger">Could not load this board.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex h-screen flex-col">
-      <BoardHeader boardId={board._id} title={board.title} />
+      <BoardHeader boardId={board.board._id} title={board.board.title} />
 
       <div className="flex-1 overflow-x-auto overflow-y-hidden px-4 py-4">
         <DndContext
