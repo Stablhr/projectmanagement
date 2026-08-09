@@ -19,6 +19,7 @@ import { useBoardState } from './boardContext';
 import { FilterPanel } from './FilterPanel';
 import { LabelsManager } from './LabelsManager';
 import { ShareBoardModal } from './ShareBoardModal';
+import { SlackSettingsModal } from './SlackSettingsModal';
 import { VisibilityModal } from './VisibilityModal';
 import { ViewSwitcher } from './ViewSwitcher';
 import { useRenameBoard } from './useBoard';
@@ -191,14 +192,7 @@ export function BoardHeader({ boardId, title }: { boardId: string; title: string
           hint="Browse and install integrations. Slack settings arrive in a later phase."
         />
       )}
-      {slackOpen && (
-        <PlaceholderDialog
-          open
-          onClose={() => setSlackOpen(false)}
-          title="Slack integration"
-          hint="Slack notifications settings are coming soon."
-        />
-      )}
+      {slackOpen && <SlackSettingsModal open onClose={() => setSlackOpen(false)} />}
     </>
   );
 }

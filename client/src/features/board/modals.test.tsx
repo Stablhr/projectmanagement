@@ -3,6 +3,7 @@ import type { BoardDetail } from '../../lib/types';
 import { BoardStateProvider, useBoardState } from './boardContext';
 import { enrichBoardDetail } from './boardData';
 import { ShareBoardModal } from './ShareBoardModal';
+import { SlackSettingsModal } from './SlackSettingsModal';
 import { VisibilityModal } from './VisibilityModal';
 
 function makeBoard(): BoardDetail {
@@ -82,5 +83,30 @@ describe('VisibilityModal', () => {
     expect(screen.getByTestId('vis')).toHaveTextContent('workspace');
     fireEvent.click(screen.getByText('Private').closest('button') as HTMLElement);
     expect(screen.getByTestId('vis')).toHaveTextContent('private');
+  });
+});
+
+describe('SlackSettingsModal', () => {
+  it('renders workspace, channel, and notification toggles', () => {
+    renderModal(<SlackSettingsModal open onClose={() => {}} />);
+    expect(screen.getByText('Slack notifications')).toBeInTheDocument();
+    expect(screen.getAllByRole('combobox')).toHaveLength(2);
+    expect(screen.getByRole('switch', { name: 'Enable Slack notifications' })).toBeChecked();
+    expect(screen.getByText(/A card is moved/)).toBeInTheDocument();
+  });
+
+  it('disables notification options when Slack is turned off', () => {
+    renderModal(<SlackSettingsModal open onClose={() => {}} />);
+    fireEvent.click(screen.getByRole('switch', { name: 'Enable Slack notifications' }));
+    expect(screen.getByRole('switch', { name: 'Enable Slack notifications' })).not.toBeChecked();
+    const channel = screen.getAllByRole('combobox')[0] as HTMLSelectElement;
+    expect(channel.closest('div')?.parentElement?.className).toContain('opacity-50');
+  });
+
+  it('dismisses on save', () => {
+    const onClose = vi.fn();
+    renderModal(<SlackSettingsModal open onClose={onClose} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Save settings' }));
+    expect(onClose).toHaveBeenCalled();
   });
 });
