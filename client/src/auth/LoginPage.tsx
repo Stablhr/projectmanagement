@@ -45,7 +45,7 @@ export function LoginPage() {
         <div className="mb-6 flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-primary-400" />
           <h1 className="text-2xl font-semibold tracking-tight text-ink">
-            {useDevAuth ? 'Kanban (dev mode)' : 'Kanban'}
+            {useDevAuth ? 'SchedFlow (dev mode)' : 'SchedFlow'}
           </h1>
         </div>
 

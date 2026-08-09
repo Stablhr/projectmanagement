@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthProvider';
@@ -7,12 +7,13 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { Spinner } from '../../components/ui/Spinner';
 import type { Board } from '../../lib/types';
 import { GlobalSearch } from '../search/GlobalSearch';
-import { useBoards, useCreateBoard } from './useBoards';
+import { useBoards, useCreateBoard, useDeleteBoard } from './useBoards';
 
 export function BoardDashboard() {
   const { user, signOut } = useAuth();
   const { data: boards, isLoading, isError } = useBoards();
   const createBoard = useCreateBoard();
+  const deleteBoard = useDeleteBoard();
 
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState('');
@@ -35,7 +36,7 @@ export function BoardDashboard() {
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-primary-400" />
           <h1 className="text-xl font-semibold tracking-tight text-ink">
-            Kanban
+            SchedFlow
           </h1>
         </div>
         <GlobalSearch />
@@ -90,7 +91,11 @@ export function BoardDashboard() {
         {!isLoading && !isError && boards && boards.length > 0 && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {boards.map((board) => (
-              <BoardCard key={board._id} board={board} />
+              <BoardCard
+                key={board._id}
+                board={board}
+                onDelete={() => deleteBoard.mutate(board._id)}
+              />
             ))}
           </div>
         )}
@@ -107,19 +112,33 @@ export function BoardDashboard() {
   );
 }
 
-function BoardCard({ board }: { board: Board }) {
+function BoardCard({ board, onDelete }: { board: Board; onDelete: () => void }) {
+  function handleDelete(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.confirm(`Delete “${board.title}”?`)) onDelete();
+  }
+
   return (
-    <Link
-      to={`/board/${board._id}`}
-      className="group relative overflow-hidden rounded-xl border border-line bg-surface p-5 shadow-sm transition-shadow hover:shadow-md"
-    >
+    <div className="group relative overflow-hidden rounded-xl border border-line bg-surface shadow-sm transition-shadow hover:shadow-md">
       <div className="absolute inset-x-0 top-0 h-1 bg-primary-400" />
-      <h3 className="font-semibold text-ink group-hover:text-primary-800">
-        {board.title}
-      </h3>
-      <p className="mt-2 text-xs text-ink-secondary">
-        {board.members.length} member{board.members.length === 1 ? '' : 's'}
-      </p>
-    </Link>
+      <Link to={`/board/${board._id}`} className="block p-5">
+        <h3 className="font-semibold text-ink group-hover:text-primary-800">
+          {board.title}
+        </h3>
+        <p className="mt-2 text-xs text-ink-secondary">
+          {board.members.length} member{board.members.length === 1 ? '' : 's'}
+        </p>
+      </Link>
+      <button
+        type="button"
+        onClick={handleDelete}
+        aria-label={`Delete ${board.title}`}
+        title="Delete board"
+        className="absolute right-2 top-2 rounded-lg p-1.5 text-ink-secondary opacity-0 transition-opacity hover:bg-danger/10 hover:text-danger focus:opacity-100 group-hover:opacity-100"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
   );
 }
