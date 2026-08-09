@@ -18,7 +18,7 @@ import { Spinner } from '../../components/ui/Spinner';
 import type { BoardDetail, Card as CardType } from '../../lib/types';
 import { useCreateList, useReorderLists } from '../lists/useLists';
 import { enrichBoardDetail } from './boardData';
-import { BoardStateProvider } from './boardContext';
+import { BoardStateProvider, useBoardState } from './boardContext';
 import { BoardHeader } from './BoardHeader';
 import { CardModal } from './CardModal';
 import { List } from './List';
@@ -76,6 +76,7 @@ export function BoardView() {
 
 function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail }) {
   const queryClient = useQueryClient();
+  const { visibleBoard, meta } = useBoardState();
   const createList = useCreateList(boardId);
   const reorderLists = useReorderLists(boardId);
   const reorderCards = useReorderCards(boardId);
@@ -92,17 +93,17 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
 
   useBoardSocket(boardId);
 
-  const lists = board.lists;
+  const lists = visibleBoard.lists;
 
   const cardsByList = useMemo(() => {
     const map: Record<string, CardType[]> = {};
     for (const list of lists) {
-      map[list._id] = board.cards
+      map[list._id] = visibleBoard.cards
         .filter((c) => c.listId === list._id)
         .sort((a, b) => a.position - b.position);
     }
     return map;
-  }, [board.cards, lists]);
+  }, [visibleBoard.cards, lists]);
 
   function readBoard() {
     return queryClient.getQueryData<BoardDetail>(['board', boardId]) ?? board;
@@ -202,7 +203,14 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
     <div className="flex h-screen flex-col">
       <BoardHeader boardId={board.board._id} title={board.board.title} />
 
-      <div className="flex-1 overflow-x-auto overflow-y-hidden px-4 py-4">
+      <div
+        className="flex-1 overflow-x-auto overflow-y-hidden px-4 py-4"
+        style={
+          meta.background.type === 'color'
+            ? { backgroundColor: meta.background.value }
+            : { backgroundImage: meta.background.value, backgroundSize: 'cover' }
+        }
+      >
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
