@@ -34,10 +34,12 @@ export function Card({ card, onOpen }: CardProps) {
     .map((id) => members.find((m) => m.id === id))
     .filter((m): m is NonNullable<typeof m> => Boolean(m));
   const urgency = dueUrgency(card.dueDate);
+  const commentCount = card.comments?.length ?? 0;
+  const attachmentCount = card.files?.length ?? 0;
 
   const hasMeta =
-    (card.commentCount ?? 0) > 0 ||
-    (card.attachmentCount ?? 0) > 0 ||
+    commentCount > 0 ||
+    attachmentCount > 0 ||
     Boolean(card.watched) ||
     Boolean(card.dueDate) ||
     cardMembers.length > 0;
@@ -116,16 +118,16 @@ export function Card({ card, onOpen }: CardProps) {
                   {formatDueDate(card.dueDate)}
                 </span>
               )}
-              {(card.commentCount ?? 0) > 0 && (
+              {commentCount > 0 && (
                 <span className="inline-flex items-center gap-1 text-[11px] text-ink-secondary">
                   <MessageSquare className="h-3 w-3" />
-                  {card.commentCount}
+                  {commentCount}
                 </span>
               )}
-              {(card.attachmentCount ?? 0) > 0 && (
+              {attachmentCount > 0 && (
                 <span className="inline-flex items-center gap-1 text-[11px] text-ink-secondary">
                   <Paperclip className="h-3 w-3" />
-                  {card.attachmentCount}
+                  {attachmentCount}
                 </span>
               )}
             </div>

@@ -213,4 +213,120 @@ describe('cards', () => {
       .send({ title: '   ' })
       .expect(400);
   });
+
+  it('patches card detail fields and returns them on load', async () => {
+    const board = await createBoard();
+    const list = await alice
+      .post(`/api/v1/boards/${board.body._id}/lists`)
+      .send({ title: 'To Do' })
+      .expect(201);
+    const card = await alice
+      .post(`/api/v1/lists/${list.body._id}/cards`)
+      .send({ title: 'Card A' })
+      .expect(201);
+    const cardId = card.body._id;
+
+    await alice
+      .patch(`/api/v1/cards/${cardId}`)
+      .send({
+        cover: { type: 'color', value: '#EB5A46' },
+        labels: ['board-1-label-1', 'board-1-label-2'],
+        memberIds: ['dev-user', 'member-aria'],
+        dueDate: '2026-09-01T00:00:00.000Z',
+        location: 'Floor 3',
+        watched: true,
+        complete: true,
+      })
+      .expect(200);
+
+    const res = await alice.get(`/api/v1/boards/${board.body._id}`).expect(200);
+    const updated = res.body.cards.find((c: any) => c._id === cardId);
+    expect(updated.cover).toEqual({ type: 'color', value: '#EB5A46' });
+    expect(updated.labels).toEqual(['board-1-label-1', 'board-1-label-2']);
+    expect(updated.memberIds).toEqual(['dev-user', 'member-aria']);
+    expect(updated.location).toBe('Floor 3');
+    expect(updated.watched).toBe(true);
+    expect(updated.complete).toBe(true);
+    expect(new Date(updated.dueDate).toISOString()).toBe('2026-09-01T00:00:00.000Z');
+  });
+
+  it('supports comments, activity, reactions, and files', async () => {
+    const board = await createBoard();
+    const list = await alice
+      .post(`/api/v1/boards/${board.body._id}/lists`)
+      .send({ title: 'To Do' })
+      .expect(201);
+    const card = await alice
+      .post(`/api/v1/lists/${list.body._id}/cards`)
+      .send({ title: 'Card A' })
+      .expect(201);
+    const cardId = card.body._id;
+
+    await alice
+      .patch(`/api/v1/cards/${cardId}`)
+      .send({
+        comments: [
+          {
+            id: 'c1',
+            authorId: 'dev-user',
+            authorName: 'Dev User',
+            text: 'first!',
+            createdAt: '2026-08-01T00:00:00.000Z',
+          },
+        ],
+        activity: [{ id: 'a1', text: 'Added a comment', createdAt: '2026-08-01T00:00:00.000Z' }],
+        reactions: { '👍': ['dev-user'], '❤️': ['member-aria'] },
+        files: [
+          { id: 'f1', name: 'spec.pdf', url: 'https://cdn.example.com/spec.pdf', kind: 'file' },
+        ],
+      })
+      .expect(200);
+
+    const res = await alice.get(`/api/v1/boards/${board.body._id}`).expect(200);
+    const updated = res.body.cards.find((c: any) => c._id === cardId);
+    expect(updated.comments).toHaveLength(1);
+    expect(updated.comments[0].text).toBe('first!');
+    expect(updated.activity).toHaveLength(1);
+    expect(updated.activity[0].text).toBe('Added a comment');
+    expect(updated.reactions).toEqual({ '👍': ['dev-user'], '❤️': ['member-aria'] });
+    expect(updated.files).toHaveLength(1);
+    expect(updated.files[0].name).toBe('spec.pdf');
+    expect(updated.files[0].url).toContain('spec.pdf');
+  });
+
+  it('caps activity and clears optional fields', async () => {
+    const board = await createBoard();
+    const list = await alice
+      .post(`/api/v1/boards/${board.body._id}/lists`)
+      .send({ title: 'To Do' })
+      .expect(201);
+    const card = await alice
+      .post(`/api/v1/lists/${list.body._id}/cards`)
+      .send({ title: 'Card A' })
+      .expect(201);
+    const cardId = card.body._id;
+
+    const activity = Array.from({ length: 40 }, (_, i) => ({
+      id: `a${i}`,
+      text: `step ${i}`,
+      createdAt: `2026-08-0${(i % 9) + 1}T00:00:00.000Z`,
+    }));
+    await alice
+      .patch(`/api/v1/cards/${cardId}`)
+      .send({ activity, dueDate: '2026-09-01T00:00:00.000Z', location: 'HQ' })
+      .expect(200);
+
+    const res = await alice
+      .patch(`/api/v1/cards/${cardId}`)
+      .send({ dueDate: null, location: '', cover: null, watched: false })
+      .expect(200);
+
+    const boardRes = await alice.get(`/api/v1/boards/${board.body._id}`).expect(200);
+    const updated = boardRes.body.cards.find((c: any) => c._id === cardId);
+    expect(updated.activity).toHaveLength(30);
+    expect(updated.dueDate).toBeNull();
+    expect(updated.location).toBe('');
+    expect(updated.cover).toBeNull();
+    expect(updated.watched).toBe(false);
+  });
 });

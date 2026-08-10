@@ -20,6 +20,32 @@ export interface List {
 
 export type CardCover = { type: 'color' | 'image'; value: string };
 
+export interface CardFile {
+  id: string;
+  name: string;
+  url: string;
+  kind: 'image' | 'file';
+  size?: number;
+  addedAt: string;
+}
+
+export interface CardComment {
+  id: string;
+  authorId: string;
+  authorName: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface CardActivityEntry {
+  id: string;
+  text: string;
+  createdAt: string;
+}
+
+/** Emoji -> member ids that reacted. */
+export type CardReactions = Record<string, string[]>;
+
 export interface Card {
   _id: string;
   listId: string;
@@ -28,15 +54,18 @@ export interface Card {
   position: number;
   createdAt: string;
   updatedAt: string;
-  /** UI-only visual enrichment (client-side for MVP; not yet persisted). */
   cover?: CardCover | null;
   /** References into the board label set. */
   labels?: string[];
-  dueDate?: string | null;
-  commentCount?: number;
-  attachmentCount?: number;
-  watched?: boolean;
+  /** References into the board member set. */
   memberIds?: string[];
+  dueDate?: string | null;
+  location?: string;
+  files?: CardFile[];
+  reactions?: CardReactions;
+  comments?: CardComment[];
+  activity?: CardActivityEntry[];
+  watched?: boolean;
   complete?: boolean;
 }
 

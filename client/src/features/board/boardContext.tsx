@@ -13,7 +13,7 @@ import type {
   Card,
   MemberProfile,
 } from '../../lib/types';
-import { boardLabels, boardMembers, enrichCard } from './boardData';
+import { boardLabels, boardMembers } from './boardData';
 
 export type BoardViewKind = 'board' | 'table' | 'calendar' | 'dashboard' | 'timeline' | 'map';
 
@@ -226,9 +226,4 @@ export function useBoardState() {
   const ctx = useContext(BoardContext);
   if (!ctx) throw new Error('useBoardState must be used within BoardStateProvider');
   return ctx;
-}
-
-/** Re-applies visual enrichment after a card is created/updated. */
-export function reenrichCard(board: BoardDetail, card: Card): Card {
-  return enrichCard(card, boardMembers(board.board._id), boardLabels(board.board._id));
 }

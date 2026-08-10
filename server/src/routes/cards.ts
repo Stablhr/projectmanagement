@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Router } from 'express';
 import { auth } from '../middleware/auth';
 import { Card } from '../models/Card';
@@ -7,6 +8,60 @@ import { resolveUser } from '../services/userContext';
 import { applyOrder, nextPosition } from '../services/reorder';
 import { parseTitle } from '../utils/http';
 import { emitToBoard } from '../realtime/socket';
+
+const MAX_ACTIVITY = 30;
+const MAX_COMMENTS = 30;
+const MAX_FILES = 50;
+
+function uid(): string {
+  return randomUUID();
+}
+
+function str(v: unknown, max = 2000): string {
+  return String(v ?? '').slice(0, max);
+}
+
+function normalizeFile(f: unknown) {
+  const file = (f ?? {}) as Record<string, unknown>;
+  return {
+    id: str(file.id, 100) || uid(),
+    name: str(file.name, 255),
+    url: str(file.url, 2000),
+    kind: file.kind === 'image' ? 'image' : 'file',
+    size: typeof file.size === 'number' ? file.size : undefined,
+    addedAt: file.addedAt ? new Date(String(file.addedAt)) : new Date(),
+  };
+}
+
+function normalizeComment(c: unknown) {
+  const comment = (c ?? {}) as Record<string, unknown>;
+  return {
+    id: str(comment.id, 100) || uid(),
+    authorId: str(comment.authorId, 100),
+    authorName: str(comment.authorName, 200),
+    text: str(comment.text, 5000),
+    createdAt: comment.createdAt ? new Date(String(comment.createdAt)) : new Date(),
+  };
+}
+
+function normalizeActivity(a: unknown) {
+  const entry = (a ?? {}) as Record<string, unknown>;
+  return {
+    id: str(entry.id, 100) || uid(),
+    text: str(entry.text, 500),
+    createdAt: entry.createdAt ? new Date(String(entry.createdAt)) : new Date(),
+  };
+}
+
+function sanitizeReactions(reactions: unknown): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  if (reactions && typeof reactions === 'object') {
+    for (const [emoji, ids] of Object.entries(reactions as Record<string, unknown>)) {
+      if (Array.isArray(ids)) map.set(emoji, ids.map(String).slice(0, 100));
+    }
+  }
+  return map;
+}
 
 const router = Router();
 router.use(auth);
@@ -45,11 +100,60 @@ router.patch('/cards/:id', async (req, res, next) => {
     const list = await List.findById(card.listId).exec();
     if (!list) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'List not found' } });
     await assertMember(String(list.boardId), user._id);
-    if (req.body.title !== undefined) {
-      card.title = parseTitle(req.body.title);
+    const b = req.body as Record<string, unknown>;
+
+    if (b.title !== undefined) {
+      card.title = parseTitle(b.title);
     }
-    if (req.body.description !== undefined) {
-      card.description = String(req.body.description ?? '').slice(0, 5000);
+    if (b.description !== undefined) {
+      card.description = String(b.description ?? '').slice(0, 5000);
+    }
+    if (b.cover !== undefined) {
+      card.cover =
+        b.cover && typeof b.cover === 'object'
+          ? {
+              type: (b.cover as Record<string, unknown>).type === 'image' ? 'image' : 'color',
+              value: str((b.cover as Record<string, unknown>).value, 500),
+            }
+          : null;
+    }
+    if (b.labels !== undefined) {
+      card.labels = Array.isArray(b.labels) ? b.labels.map(String).slice(0, 50) : card.labels;
+    }
+    if (b.memberIds !== undefined) {
+      card.memberIds = Array.isArray(b.memberIds)
+        ? b.memberIds.map(String).slice(0, 50)
+        : card.memberIds;
+    }
+    if (b.dueDate !== undefined) {
+      card.dueDate = b.dueDate ? new Date(String(b.dueDate)) : null;
+    }
+    if (b.location !== undefined) {
+      card.location = String(b.location ?? '').slice(0, 500);
+    }
+    if (b.files !== undefined) {
+      card.files = Array.isArray(b.files)
+        ? (b.files.slice(-MAX_FILES).map(normalizeFile) as any)
+        : card.files;
+    }
+    if (b.reactions !== undefined) {
+      card.reactions = sanitizeReactions(b.reactions) as any;
+    }
+    if (b.comments !== undefined) {
+      card.comments = Array.isArray(b.comments)
+        ? (b.comments.slice(-MAX_COMMENTS).map(normalizeComment) as any)
+        : card.comments;
+    }
+    if (b.activity !== undefined) {
+      card.activity = Array.isArray(b.activity)
+        ? (b.activity.slice(-MAX_ACTIVITY).map(normalizeActivity) as any)
+        : card.activity;
+    }
+    if (b.watched !== undefined) {
+      card.watched = Boolean(b.watched);
+    }
+    if (b.complete !== undefined) {
+      card.complete = Boolean(b.complete);
     }
     await card.save();
     emitToBoard(req, String(list.boardId), 'card:updated', { card });

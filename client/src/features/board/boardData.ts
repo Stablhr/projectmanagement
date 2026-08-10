@@ -1,26 +1,18 @@
 import type {
   BoardDetail,
   BoardLabel,
-  Card,
   List,
   MemberProfile,
 } from '../../lib/types';
 
 /**
- * MVP demo-data layer for the visual pieces that don't have a backend yet
- * (labels, covers, due dates, counts, membership profiles, assignees).
+ * Demo-data layer for the visual pieces that don't have a backend yet
+ * (membership profiles and the per-list assignee subtitle).
  *
- * Everything here is a pure, deterministic function of ids so the same card
- * always renders the same way. When persistence lands, replace `enrich*` with
- * data read from the backend and delete the mocks.
- *
- * Firestore mapping notes (for the eventual real implementation):
- *  - boards/{boardId}/labels            -> one doc per label
- *  - boards/{boardId}/members/{userId}  -> per-member role/profile ref
- *  - cards/{cardId}                     -> cover, labels, dueDate,
- *                                          commentCount, attachmentCount,
- *                                          watchedBy, memberIds, complete
- *  - lists/{listId}                     -> assigneeId
+ * Everything here is a pure, deterministic function of ids so the same board
+ * always renders the same way. Card detail fields (cover, labels, due dates,
+ * assignees, comments, activity, ...) are stored on the server and read back
+ * through the REST API.
  */
 
 export const ME_ID = 'dev-user';
@@ -87,8 +79,6 @@ export function boardLabels(boardId: string): BoardLabel[] {
   return picked;
 }
 
-const COVER_COLORS = ['#99E1D9', '#FF9F1A', '#C377E0', '#0079BF', '#61BD4F', '#F2D600', '#FF78CB'];
-
 function hashOf(input: string): number {
   let h = 0;
   for (let i = 0; i < input.length; i++) {
@@ -101,72 +91,15 @@ function pseudoInt(input: string, range: number): number {
   return hashOf(input) % range;
 }
 
-const HOUR = 60 * 60 * 1000;
-const DAY = 24 * HOUR;
-
-function deterministicDueDate(input: string, now: number = Date.now()): string | null {
-  const roll = pseudoInt(input, 100);
-  if (roll < 45) return null;
-  const offsets = [-5 * DAY, -3 * DAY, -1 * DAY, -12 * HOUR, -6 * HOUR, 6 * HOUR, 1 * DAY, 2 * DAY, 5 * DAY, 12 * DAY];
-  const offset = offsets[pseudoInt(input, offsets.length)];
-  return new Date(now + offset).toISOString();
-}
-
-export function enrichCard(
-  card: Card,
-  members: MemberProfile[],
-  labels: BoardLabel[],
-  now?: number,
-): Card {
-  const h = hashOf(card._id);
-
-  const coverRoll = h % 10;
-  let cover: Card['cover'] = null;
-  if (coverRoll < 3) {
-    cover = { type: 'color', value: COVER_COLORS[h % COVER_COLORS.length] };
-  } else if (coverRoll < 6) {
-    const a = COVER_COLORS[h % COVER_COLORS.length];
-    const b = COVER_COLORS[(h + 2) % COVER_COLORS.length];
-    cover = { type: 'image', value: `linear-gradient(120deg, ${a}, ${b})` };
-  }
-
-  const labelCount = h % 3 === 0 ? 0 : 1 + ((h >> 3) % 2);
-  const cardLabels: string[] = [];
-  for (let i = 0; i < labelCount; i++) {
-    const label = labels[(h + i * 5) % labels.length];
-    if (label && !cardLabels.includes(label.id)) cardLabels.push(label.id);
-  }
-
-  const memberCount = h % 4 === 0 ? 0 : 1 + ((h >> 5) % Math.min(3, members.length));
-  const cardMembers: string[] = [];
-  for (let i = 0; i < memberCount; i++) {
-    const m = members[(h + i * 7) % members.length];
-    if (m && !cardMembers.includes(m.id)) cardMembers.push(m.id);
-  }
-
-  return {
-    ...card,
-    cover,
-    labels: cardLabels,
-    dueDate: deterministicDueDate(card._id, now),
-    commentCount: h % 3 === 0 ? 0 : h % 8,
-    attachmentCount: h % 5 === 0 ? 0 : h % 5,
-    watched: h % 7 === 0,
-    memberIds: cardMembers,
-    complete: h % 11 === 0,
-  };
-}
-
 export function enrichList(list: List, members: MemberProfile[]): List {
   return { ...list, assigneeId: members[pseudoInt(list._id, members.length)]?.id };
 }
 
-export function enrichBoardDetail(board: BoardDetail, now?: number): BoardDetail {
+export function enrichBoardDetail(board: BoardDetail): BoardDetail {
   const members = boardMembers(board.board._id);
-  const labels = boardLabels(board.board._id);
   return {
     ...board,
     lists: board.lists.map((l) => enrichList(l, members)),
-    cards: board.cards.map((c) => enrichCard(c, members, labels, now)),
+    cards: board.cards,
   };
 }

@@ -86,7 +86,10 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
 
   const [dragState, setDragState] = useState<DragState | null>(null);
   const snapshotRef = useRef<BoardDetail | null>(null);
-  const [openCard, setOpenCard] = useState<CardType | null>(null);
+  const [openCardId, setOpenCardId] = useState<string | null>(null);
+  const openCard = openCardId
+    ? board.cards.find((c) => c._id === openCardId)
+    : undefined;
   const [addingList, setAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
 
@@ -247,7 +250,7 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
                   boardId={boardId}
                   list={list}
                   cards={cardsByList[list._id] ?? []}
-                  onOpenCard={setOpenCard}
+                  onOpenCard={(card) => setOpenCardId(card._id)}
                 />
               ))}
 
@@ -319,7 +322,7 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
         <CardModal
           boardId={boardId}
           card={openCard}
-          onClose={() => setOpenCard(null)}
+          onClose={() => setOpenCardId(null)}
         />
       )}
     </div>

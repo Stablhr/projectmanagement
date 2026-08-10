@@ -3,12 +3,13 @@ import { clsx } from 'clsx';
 export type DueUrgency = 'overdue' | 'soon' | 'on-time' | 'none';
 
 const DAY = 24 * 60 * 60 * 1000;
+const SOON_WINDOW = 2 * DAY;
 
 export function dueUrgency(dueDate?: string | null): DueUrgency {
   if (!dueDate) return 'none';
   const diff = new Date(dueDate).getTime() - Date.now();
   if (diff < 0) return 'overdue';
-  if (diff <= DAY) return 'soon';
+  if (diff <= SOON_WINDOW) return 'soon';
   return 'on-time';
 }
 
@@ -28,14 +29,14 @@ export function formatDueDate(dueDate?: string | null): string {
 const badgeClasses: Record<DueUrgency, string> = {
   overdue: 'bg-danger/10 text-danger',
   soon: 'bg-warning/15 text-warning',
-  'on-time': 'bg-success/10 text-success',
+  'on-time': 'bg-ink/10 text-ink-secondary',
   none: '',
 };
 
 const dotClasses: Record<DueUrgency, string> = {
   overdue: 'bg-danger',
   soon: 'bg-warning',
-  'on-time': 'bg-success',
+  'on-time': 'bg-ink/30',
   none: 'bg-ink/20',
 };
 
