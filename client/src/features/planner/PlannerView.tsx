@@ -96,6 +96,32 @@ export function PlannerView() {
     return byDay;
   }, [details]);
 
+  const unscheduled = useMemo(() => {
+    const all: ScheduledCard[] = [];
+    details.forEach((q) => {
+      const bd = q.data;
+      if (!bd) return;
+      for (const card of bd.cards) {
+        if (card.dueDate) continue;
+        const list = bd.lists.find((l) => l._id === card.listId);
+        all.push({
+          card,
+          boardId: bd.board._id,
+          boardTitle: bd.board.title,
+          listTitle: list?.title ?? '',
+        });
+      }
+    });
+    all.sort((a, b) => {
+      const boardCmp = a.boardTitle.localeCompare(b.boardTitle);
+      if (boardCmp !== 0) return boardCmp;
+      const listCmp = a.listTitle.localeCompare(b.listTitle);
+      if (listCmp !== 0) return listCmp;
+      return a.card.title.localeCompare(b.card.title);
+    });
+    return all;
+  }, [details]);
+
   const todayKey = dayKey(startOfToday());
   const keys = useMemo(() => {
     const all = [...scheduled.keys()].sort();
@@ -108,7 +134,7 @@ export function PlannerView() {
     return { overdueKeys, upcoming };
   }, [scheduled, todayKey]);
 
-  const hasAnything = scheduled.size > 0;
+  const hasAnything = scheduled.size > 0 || unscheduled.length > 0;
 
   function CardRow({ entry }: { entry: ScheduledCard }) {
     return (
@@ -132,10 +158,10 @@ export function PlannerView() {
             Done
           </span>
         )}
-        {formatDueTime(entry.card.dueDate!) && (
+        {entry.card.dueDate && formatDueTime(entry.card.dueDate) && (
           <span className="inline-flex shrink-0 items-center gap-1 text-xs tabular text-ink-secondary">
             <Clock className="h-3 w-3" />
-            {formatDueTime(entry.card.dueDate!)}
+            {formatDueTime(entry.card.dueDate)}
           </span>
         )}
       </Link>
@@ -171,7 +197,8 @@ export function PlannerView() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-ink">Planner</h1>
           <p className="mt-0.5 text-sm text-ink-secondary">
-            Cards with a due date show up here so you can see what's coming.
+            Cards with a due date show up here so you can see what's coming. Cards without one
+            are listed under Not yet scheduled.
           </p>
         </div>
       </div>
@@ -197,6 +224,22 @@ export function PlannerView() {
           {keys.upcoming.map((k) => (
             <DaySection key={k} title={formatDay(k)} day={k} />
           ))}
+
+          {unscheduled.length > 0 && (
+            <section>
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-ink">
+                Not yet scheduled
+                <span className="text-xs font-normal text-ink-secondary tabular">
+                  {unscheduled.length} card{unscheduled.length === 1 ? '' : 's'}
+                </span>
+              </h3>
+              <div className="space-y-1.5">
+                {unscheduled.map((entry) => (
+                  <CardRow key={entry.card._id} entry={entry} />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
 

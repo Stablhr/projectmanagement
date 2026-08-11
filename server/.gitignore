@@ -4,5 +4,6 @@ dist/
 *.local
 coverage/
 data/
+uploads/
 # Firebase service-account private keys (never commit these)
 *firebase-adminsdk*.json

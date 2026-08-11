@@ -42,10 +42,35 @@ async function request(method: string, path: string, body?: unknown) {
   return data;
 }
 
+async function requestForm(method: string, path: string, form: FormData) {
+  const headers: Record<string, string> = {};
+  const token = await tokenGetter();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(apiBase + path, {
+    method,
+    headers,
+    body: form,
+  });
+
+  if (res.status === 204) return null;
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiError(
+      res.status,
+      data?.error?.code ?? 'UNKNOWN',
+      data?.error?.message ?? res.statusText,
+    );
+  }
+  return data;
+}
+
 export const api = {
   get: <T = unknown>(path: string) => request('GET', path) as Promise<T>,
   post: <T = unknown>(path: string, body?: unknown) =>
     request('POST', path, body) as Promise<T>,
+  postForm: <T = unknown>(path: string, form: FormData) =>
+    requestForm('POST', path, form) as Promise<T>,
   patch: <T = unknown>(path: string, body?: unknown) =>
     request('PATCH', path, body) as Promise<T>,
   put: <T = unknown>(path: string, body?: unknown) =>

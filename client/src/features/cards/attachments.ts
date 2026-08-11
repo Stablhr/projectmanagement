@@ -1,28 +1,19 @@
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { storage } from '../../lib/firebase';
-import { uid } from '../../lib/ids';
+import { api } from '../../lib/api';
 import type { CardFile } from '../../lib/types';
 
 /**
- * Upload a file to Firebase Storage under the card's attachments path and
- * return its metadata for storing on the card. Throws if storage is not
- * configured or the upload fails.
+ * Upload a file to the card's attachments. The server stores the bytes under
+ * `server/uploads/<cardId>/` and returns the file metadata to attach to the card.
+ * Throws if the upload fails.
  */
 export async function uploadAttachment(cardId: string, file: File): Promise<CardFile> {
-  if (!storage) {
-    throw new Error('Firebase Storage is not configured for this app.');
-  }
-  const safeName = file.name.replace(/[^\w.-]+/g, '_');
-  const fileRef = ref(storage, `card-attachments/${cardId}/${Date.now()}-${safeName}`);
-  await uploadBytes(fileRef, file);
-  const url = await getDownloadURL(fileRef);
-  const isImage = file.type.startsWith('image/');
-  return {
-    id: uid(),
-    name: file.name,
-    url,
-    kind: isImage ? 'image' : 'file',
-    size: file.size,
-    addedAt: new Date().toISOString(),
-  };
+  const form = new FormData();
+  form.append('files', file);
+  const data = await api.postForm<{ files: CardFile[] }>(
+    `/cards/${cardId}/attachments`,
+    form,
+  );
+  const attached = data.files ?? [];
+  if (attached.length === 0) throw new Error('Upload failed');
+  return attached[0];
 }
