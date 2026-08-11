@@ -4,3 +4,31 @@
 
 [db] local file store: C:\Users\Aries\OneDrive\文档\Aries\projectmanagement\server\data\dev-db.json
 [server] listening on http://localhost:4000
+12:04:47 AM [tsx] change in ./src\app.ts Restarting...
+[db] local file store: C:\Users\Aries\OneDrive\文档\Aries\projectmanagement\server\data\dev-db.json
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::4000
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at main (C:\Users\Aries\OneDrive\文档\Aries\projectmanagement\server\src\index.ts:21:10)
+    at http (C:\Users\Aries\OneDrive\文档\Aries\projectmanagement\server\src\index.ts:26:1)
+    at Object.<anonymous> (C:\Users\Aries\OneDrive\文档\Aries\projectmanagement\server\src\index.ts:29:2)
+    at Module._compile (node:internal/modules/cjs/loader:1873:14)
+    at Object.transformer (C:\Users\Aries\OneDrive\文档\Aries\projectmanagement\server\node_modules\tsx\dist\register-CeSc3Ioe.cjs:9:3619)
+    at Module.load (node:internal/modules/cjs/loader:1596:32)
+    at Module._load (node:internal/modules/cjs/loader:1398:12)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 4000
+}
+
+Node.js v26.2.0

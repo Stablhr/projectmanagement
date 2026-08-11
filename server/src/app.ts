@@ -24,6 +24,14 @@ app.use(express.json());
 
 app.use('/uploads', express.static(uploadsDir));
 
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    console.log(`[req] ${req.method} ${req.url} -> ${res.statusCode} ${Date.now() - start}ms`);
+  });
+  next();
+});
+
 app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({
     status: 'ok',

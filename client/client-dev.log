@@ -13,3 +13,6 @@
 [2m11:29:03 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/board/Card.tsx, /src/index.css[22m
 [2m11:29:17 PM[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/features/board/Card.tsx, /src/index.css[22m
 [2m11:29:34 PM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/features/board/Card.test.tsx[22m
+[2m12:04:47 AM[22m [31m[1m[vite][22m[39m [31mws proxy error:[39m
+Error: read ECONNRESET
+    at TCP.onStreamRead (node:internal/stream_base_commons:216:20)
