@@ -6,36 +6,36 @@ export interface BoardBackground {
 }
 
 export const BOARD_BACKGROUNDS: BoardBackground[] = [
-  { id: 'bg-ink', name: 'Slate', type: 'color', value: '#2B3A45' },
-  { id: 'bg-navy', name: 'Navy', type: 'color', value: '#274555' },
-  { id: 'bg-lilac', name: 'Lilac', type: 'color', value: '#8B8DF4' },
-  { id: 'bg-purple', name: 'Purple', type: 'color', value: '#4347C4' },
-  { id: 'bg-coral', name: 'Coral', type: 'color', value: '#FF8B5E' },
+  { id: 'bg-ink', name: 'Slate', type: 'color', value: '#1A2B2A' },
+  { id: 'bg-teal', name: 'Deep Teal', type: 'color', value: '#0F4C45' },
+  { id: 'bg-turquoise', name: 'Turquoise', type: 'color', value: '#99E1D9' },
+  { id: 'bg-mid-teal', name: 'Mid Teal', type: 'color', value: '#4AAFA5' },
+  { id: 'bg-amber', name: 'Amber', type: 'color', value: '#B45309' },
   { id: 'bg-sand', name: 'Sand', type: 'color', value: '#D6B57A' },
   { id: 'bg-charcoal', name: 'Charcoal', type: 'color', value: '#3D3F45' },
   {
     id: 'bg-dusk',
     name: 'Dusk',
     type: 'image',
-    value: 'linear-gradient(135deg, #5B5FEF, #8B8DF4)',
+    value: 'linear-gradient(135deg, #4AAFA5, #0F4C45)',
   },
   {
     id: 'bg-sunset',
     name: 'Sunset',
     type: 'image',
-    value: 'linear-gradient(135deg, #FF8B5E, #FF99AC)',
+    value: 'linear-gradient(135deg, #2E8C83, #99E1D9)',
   },
   {
     id: 'bg-ocean',
     name: 'Ocean',
     type: 'image',
-    value: 'linear-gradient(135deg, #1FA2FF, #12D8FA)',
+    value: 'linear-gradient(135deg, #1A2B2A, #4AAFA5)',
   },
   {
     id: 'bg-forest',
     name: 'Forest',
     type: 'image',
-    value: 'linear-gradient(135deg, #33B27A, #71B280)',
+    value: 'linear-gradient(135deg, #1F9D6B, #51E898)',
   },
 ];
 

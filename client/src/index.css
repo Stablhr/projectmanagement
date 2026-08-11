@@ -2,15 +2,28 @@
 @import '@fontsource/inter/500.css';
 @import '@fontsource/inter/600.css';
 @import '@fontsource/inter/700.css';
-@import '@fontsource/space-grotesk/500.css';
-@import '@fontsource/space-grotesk/600.css';
-@import '@fontsource/space-grotesk/700.css';
-@import '@fontsource/jetbrains-mono/400.css';
-@import '@fontsource/jetbrains-mono/500.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --turquoise-200: #b8ebe3;
+  --turquoise-300: #a5e5dd;
+  --turquoise-400: #99e1d9;
+  --turquoise-600: #4aafa5;
+  --turquoise-700: #2e8c83;
+  --turquoise-800: #0f4c45;
+  --surface: #ffffff;
+  --background: #f7faf9;
+  --border: #e2e8e6;
+  --text-primary: #1a2b2a;
+  --text-secondary: #5b6b68;
+  --success: #1f9d6b;
+  --warning: #b45309;
+  --danger: #dc2626;
+  --info: #2563eb;
+}
 
 @layer base {
   html {
@@ -36,7 +49,7 @@
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d5d2ed;
+  background: #c7d6d2;
   border-radius: 10px;
 }
 ::-webkit-scrollbar-track {

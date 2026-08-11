@@ -46,7 +46,7 @@ export function LoginPage() {
           <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-primary-500 to-accent">
             <div className="absolute inset-[11px] rounded-md bg-surface opacity-90" />
           </div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-ink">
+          <h1 className="text-2xl font-bold tracking-tight text-ink">
             {useDevAuth ? 'SchedFlow (dev mode)' : 'SchedFlow'}
           </h1>
         </div>

@@ -23,7 +23,7 @@ export function SidebarViewPlaceholder({ view }: { view: 'planner' | 'inbox' }) 
         <Icon className="h-8 w-8 text-primary-700" />
       </div>
       <div>
-        <h2 className="font-display text-xl font-semibold text-ink">{title}</h2>
+        <h2 className="text-xl font-semibold text-ink">{title}</h2>
         <p className="mt-1 max-w-sm text-sm text-ink-secondary">{caption}</p>
       </div>
       <span className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink-secondary">

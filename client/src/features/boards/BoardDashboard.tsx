@@ -33,7 +33,7 @@ export function BoardDashboard() {
       <main className="mx-auto max-w-6xl px-6 py-8">
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">
               Your boards
             </h1>
             <p className="mt-1 text-sm text-ink-secondary">
@@ -108,10 +108,10 @@ function BoardCard({ board, onDelete }: { board: Board; onDelete: () => void }) 
     <div className="group relative overflow-hidden rounded-xl border border-line bg-surface shadow-sm transition-shadow hover:shadow-md">
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 to-accent" />
       <Link to={`/board/${board._id}`} className="block p-5">
-        <h3 className="font-display text-lg font-semibold text-ink group-hover:text-primary-700">
+        <h3 className="text-lg font-semibold text-ink group-hover:text-primary-700">
           {board.title}
         </h3>
-        <p className="mt-1 font-mono text-xs text-ink-secondary">
+        <p className="mt-1 tabular text-xs text-ink-secondary">
           {board.members.length} member{board.members.length === 1 ? '' : 's'}
         </p>
       </Link>

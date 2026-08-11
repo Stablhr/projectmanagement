@@ -311,7 +311,7 @@ export function CardModal({ boardId, card, onClose }: CardModalProps) {
             saveTitle();
           }}
           onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-          className="w-full rounded-lg border border-transparent bg-transparent font-display text-xl font-semibold text-ink hover:border-line focus:border-primary-500 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          className="w-full rounded-lg border border-transparent bg-transparent text-xl font-semibold text-ink hover:border-line focus:border-primary-500 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary-500/30"
         />
         <button
           onClick={toggleWatch}
@@ -328,7 +328,7 @@ export function CardModal({ boardId, card, onClose }: CardModalProps) {
         </button>
       </div>
 
-      <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-ink-secondary">
+      <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 tabular text-xs text-ink-secondary">
         <span>in list {listName ?? '…'}</span>
         {draft.location && (
           <span className="inline-flex items-center gap-1 rounded bg-ink/5 px-1.5 py-0.5 text-ink-secondary">

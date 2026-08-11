@@ -9,7 +9,7 @@ export function SearchPage() {
   return (
     <div className="min-h-full">
       <header className="flex items-center gap-3 border-b border-line bg-surface px-6 py-4">
-        <h1 className="font-display text-xl font-semibold tracking-tight text-ink">Search</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-ink">Search</h1>
         {q && <span className="text-sm text-ink-secondary">for “{q}”</span>}
       </header>
       <div className="flex flex-col items-center gap-4 px-6 py-16">

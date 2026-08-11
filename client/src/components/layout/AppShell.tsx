@@ -19,7 +19,7 @@ export function AppShell() {
           <div className="relative h-[26px] w-[26px] shrink-0 rounded-lg bg-gradient-to-br from-primary-500 to-accent">
             <div className="absolute inset-[6px] rounded-[3px] bg-surface opacity-90" />
           </div>
-          <span className="font-display text-[19px] font-bold tracking-tight text-ink">
+          <span className="text-[19px] font-bold tracking-tight text-ink">
             SchedFlow
           </span>
         </div>
