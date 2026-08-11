@@ -7,6 +7,7 @@ import { AppShell } from './components/layout/AppShell';
 import { BoardView } from './features/board/BoardView';
 import { BoardDashboard } from './features/boards/BoardDashboard';
 import { SearchPage } from './features/search/SearchPage';
+import { PlannerView } from './features/planner/PlannerView';
 import { SidebarViewPlaceholder } from './features/sidebar/SidebarViewPlaceholder';
 
 const queryClient = new QueryClient({
@@ -31,7 +32,7 @@ export function App() {
                 <Route path="/" element={<BoardDashboard />} />
                 <Route path="/board/:boardId" element={<BoardView />} />
                 <Route path="/search" element={<SearchPage />} />
-                <Route path="/planner" element={<SidebarViewPlaceholder view="planner" />} />
+                <Route path="/planner" element={<PlannerView />} />
                 <Route path="/inbox" element={<SidebarViewPlaceholder view="inbox" />} />
               </Route>
             </Route>

@@ -10,6 +10,7 @@ import {
   MapPin,
   Paperclip,
   Plus,
+  SmilePlus,
   Trash2,
   X,
 } from 'lucide-react';
@@ -28,6 +29,7 @@ import type {
 } from '../../lib/types';
 import { uploadAttachment } from '../cards/attachments';
 import { useDeleteCard } from '../cards/useCards';
+import { EMOJI_CATEGORIES } from './emoji';
 import { ME_ID, meProfile } from './boardData';
 import { useBoardState } from './boardContext';
 import { useUpdateCard, type CardPatch } from './useBoard';
@@ -50,8 +52,6 @@ const COVER_COLORS = [
   '#FF78CB',
   '#344563',
 ];
-
-const REACTIONS = ['👍', '🎉', '👀', '❤️'];
 
 interface Draft {
   cover: CardType['cover'] | null;
@@ -97,6 +97,8 @@ export function CardModal({ boardId, card, onClose }: CardModalProps) {
   const [commentDraft, setCommentDraft] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
   const titleFocused = useRef(false);
   const descFocused = useRef(false);
 
@@ -150,6 +152,26 @@ export function CardModal({ boardId, card, onClose }: CardModalProps) {
 
   const listName = visibleBoard.lists.find((l) => l._id === card.listId)?.title;
   const me = meProfile();
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    function onDown(e: MouseEvent | TouchEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setPickerOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setPickerOpen(false);
+    }
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('touchstart', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('touchstart', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [pickerOpen]);
 
   function apply(patch: CardPatch) {
     update.mutate({ cardId: card._id, patch });
@@ -563,29 +585,77 @@ export function CardModal({ boardId, card, onClose }: CardModalProps) {
           {/* Reactions */}
           <section>
             <label className={sectionLabel}>Reactions</label>
-            <div className="flex flex-wrap gap-2">
-              {REACTIONS.map((emoji) => {
-                const ids = draft.reactions[emoji] ?? [];
-                const mine = ids.includes(ME_ID);
-                return (
-                  <button
-                    key={emoji}
-                    onClick={() => toggleReaction(emoji)}
-                    aria-label={`React ${emoji}${mine ? ' (remove)' : ''}`}
-                    className={clsx(
-                      'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm transition-colors',
-                      mine
-                        ? 'border-primary-500 bg-primary-200/50'
-                        : 'border-line bg-surface hover:bg-canvas',
-                    )}
+            <div className="flex flex-wrap items-center gap-2">
+              {Object.entries(draft.reactions).map(([emoji, ids]) => (
+                <button
+                  key={emoji}
+                  onClick={() => toggleReaction(emoji)}
+                  aria-label={`React ${emoji}${ids.includes(ME_ID) ? ' (remove)' : ''}`}
+                  className={clsx(
+                    'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm transition-colors',
+                    ids.includes(ME_ID)
+                      ? 'border-primary-500 bg-primary-200/50'
+                      : 'border-line bg-surface hover:bg-canvas',
+                  )}
+                >
+                  <span>{emoji}</span>
+                  {ids.length > 0 && (
+                    <span className="text-xs font-semibold tabular text-ink-secondary">{ids.length}</span>
+                  )}
+                </button>
+              ))}
+
+              <div ref={pickerRef} className="relative">
+                <button
+                  onClick={() => setPickerOpen((o) => !o)}
+                  className={clsx(
+                    'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm transition-colors',
+                    pickerOpen
+                      ? 'border-primary-500 bg-primary-200/50'
+                      : 'border-line bg-surface hover:bg-canvas',
+                  )}
+                  aria-label="React with an emoji"
+                  aria-expanded={pickerOpen}
+                  aria-haspopup="menu"
+                >
+                  <SmilePlus className="h-4 w-4 text-ink-secondary" />
+                  React
+                </button>
+
+                {pickerOpen && (
+                  <div
+                    role="menu"
+                    aria-label="Choose an emoji"
+                    className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-line bg-surface p-2 shadow-lg"
                   >
-                    <span>{emoji}</span>
-                    {ids.length > 0 && (
-                      <span className="text-xs font-semibold tabular text-ink-secondary">{ids.length}</span>
-                    )}
-                  </button>
-                );
-              })}
+                    {EMOJI_CATEGORIES.map((cat) => (
+                      <div key={cat.label} className="mb-1.5 last:mb-0">
+                        <p className="px-1 pb-1 text-[10px] font-semibold uppercase tracking-[0.05em] text-ink-secondary">
+                          {cat.label}
+                        </p>
+                        <div className="grid grid-cols-6 gap-0.5">
+                          {cat.emojis.map((emoji) => (
+                            <button
+                              key={emoji}
+                              onClick={() => {
+                                toggleReaction(emoji);
+                                setPickerOpen(false);
+                              }}
+                              className={clsx(
+                                'rounded-lg p-1.5 text-lg leading-none transition-colors hover:bg-canvas',
+                                (draft.reactions[emoji] ?? []).includes(ME_ID) && 'bg-primary-200/40',
+                              )}
+                              aria-label={`React with ${emoji}`}
+                            >
+                              <span role="img" aria-hidden>{emoji}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </section>
 
