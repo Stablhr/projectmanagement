@@ -1,0 +1,6 @@
+
+> server@0.1.0 dev
+> tsx watch src/index.ts
+
+[db] local file store: C:\Users\Aries\OneDrive\文档\Aries\projectmanagement\server\data\dev-db.json
+[server] listening on http://localhost:4000
