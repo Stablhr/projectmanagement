@@ -104,7 +104,22 @@ describe('Card visual details', () => {
       ...base,
       cards: base.cards.map((c) =>
         c._id === 'card-1'
-          ? { ...c, commentCount: 3, attachmentCount: 2, dueDate: null, memberIds: [], watched: false, labels: [] }
+          ? {
+              ...c,
+              comments: [
+                { id: 'c1', authorId: 'u1', authorName: 'Dev User', text: 'Looks good', createdAt: '' },
+                { id: 'c2', authorId: 'u1', authorName: 'Dev User', text: 'LGTM', createdAt: '' },
+                { id: 'c3', authorId: 'u1', authorName: 'Dev User', text: 'Ship it', createdAt: '' },
+              ],
+              files: [
+                { id: 'f1', name: 'mock.png', url: 'https://x/mock.png', kind: 'image' as const, addedAt: '' },
+                { id: 'f2', name: 'notes.pdf', url: 'https://x/notes.pdf', kind: 'file' as const, addedAt: '' },
+              ],
+              dueDate: null,
+              memberIds: [],
+              watched: false,
+              labels: [],
+            }
           : c,
       ),
     };
@@ -125,7 +140,7 @@ describe('Card visual details', () => {
       ...base,
       cards: base.cards.map((c) =>
         c._id === 'card-1'
-          ? { ...c, watched: true, commentCount: 0, attachmentCount: 0, dueDate: null, memberIds: [], labels: [] }
+          ? { ...c, watched: true, comments: [], files: [], dueDate: null, memberIds: [], labels: [] }
           : c,
       ),
     };

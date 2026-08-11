@@ -35,8 +35,8 @@ describe('boardData enrichment', () => {
   });
 
   it('is deterministic for the same input', () => {
-    const a = enrichBoardDetail(makeBoard(), 1_700_000_000_000);
-    const b = enrichBoardDetail(makeBoard(), 1_700_000_000_000);
+    const a = enrichBoardDetail(makeBoard());
+    const b = enrichBoardDetail(makeBoard());
     expect(a.cards).toEqual(b.cards);
     expect(a.lists).toEqual(b.lists);
   });
@@ -48,15 +48,12 @@ describe('boardData enrichment', () => {
     }
   });
 
-  it('adds visual fields to every card', () => {
+  it('leaves card detail fields to the server data', () => {
     const enriched = enrichBoardDetail(makeBoard());
     for (const card of enriched.cards) {
-      expect(typeof card.labels).toBe('object');
-      expect(typeof card.commentCount).toBe('number');
-      expect(typeof card.attachmentCount).toBe('number');
-      expect(typeof card.watched).toBe('boolean');
-      expect(Array.isArray(card.memberIds)).toBe(true);
-      expect('dueDate' in card).toBe(true);
+      expect(card.cover).toBeUndefined();
+      expect(card.labels).toBeUndefined();
+      expect(card.dueDate).toBeUndefined();
     }
   });
 

@@ -18,12 +18,13 @@ describe('dueUrgency', () => {
     expect(dueUrgency(iso(-1 * DAY))).toBe('overdue');
   });
 
-  it('flags dates within 24h as soon', () => {
+  it('flags dates within 48h as soon', () => {
     expect(dueUrgency(iso(6 * HOUR))).toBe('soon');
+    expect(dueUrgency(iso(2 * DAY))).toBe('soon');
   });
 
   it('flags later dates as on-time', () => {
-    expect(dueUrgency(iso(2 * DAY))).toBe('on-time');
+    expect(dueUrgency(iso(3 * DAY))).toBe('on-time');
   });
 
   it('maps urgency to distinct badge classes', () => {

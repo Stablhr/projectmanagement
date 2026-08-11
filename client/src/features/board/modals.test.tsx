@@ -15,7 +15,7 @@ function makeBoard(): BoardDetail {
 }
 
 function renderModal(children: React.ReactNode) {
-  const enriched = enrichBoardDetail(makeBoard(), 1_700_000_000_000);
+  const enriched = enrichBoardDetail(makeBoard());
   return render(<BoardStateProvider board={enriched}>{children}</BoardStateProvider>);
 }
 

@@ -25,7 +25,7 @@ const handlers = {
 };
 
 function renderMenu() {
-  const enriched = enrichBoardDetail(makeBoard(), 1_700_000_000_000);
+  const enriched = enrichBoardDetail(makeBoard());
   return render(
     <BoardStateProvider board={enriched}>
       <BoardMenu open {...handlers} />
@@ -77,7 +77,7 @@ describe('BoardMenu', () => {
 
 describe('LabelsManager', () => {
   it('creates a new label', () => {
-    const enriched = enrichBoardDetail(makeBoard(), 1_700_000_000_000);
+    const enriched = enrichBoardDetail(makeBoard());
     render(
       <BoardStateProvider board={enriched}>
         <LabelsManager open onClose={vi.fn()} />
@@ -91,7 +91,7 @@ describe('LabelsManager', () => {
   });
 
   it('deletes an existing label', () => {
-    const enriched = enrichBoardDetail(makeBoard(), 1_700_000_000_000);
+    const enriched = enrichBoardDetail(makeBoard());
     const name = enriched.board.title;
     void name;
     render(
