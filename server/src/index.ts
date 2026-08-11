@@ -2,11 +2,11 @@ import http from 'http';
 import { Server } from 'socket.io';
 import { app } from './app';
 import { env } from './config/env';
-import { connectDb } from './db/mongoose';
+import { initFileDb } from './db/fileStore';
 import { setupSocket } from './realtime/socket';
 
 async function main() {
-  await connectDb();
+  initFileDb();
 
   const server = http.createServer(app);
   const io = new Server(server, {

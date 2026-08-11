@@ -93,7 +93,7 @@ router.post('/:id/members', async (req, res, next) => {
     if (!memberId || board.members.some((m) => String(m) === memberId)) {
       return res.json(board);
     }
-    board.members.push(memberId as any);
+    board.members.push(memberId);
     await board.save();
     res.json(board);
   } catch (err) {

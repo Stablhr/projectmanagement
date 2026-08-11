@@ -1,13 +1,14 @@
 import { Request } from 'express';
-import { User } from '../models/User';
+import { User, type UserDoc } from '../models/User';
+import { unauthorizedError } from '../utils/http';
 
 /**
- * Upsert the Mongo user record for the authenticated Firebase user.
- * Ensures the caller has a matching Mongo `_id` for board ownership queries.
+ * Upsert the local user record for the authenticated Firebase user.
+ * Ensures the caller has a matching `_id` for board ownership queries.
  */
-export async function resolveUser(req: Request) {
+export async function resolveUser(req: Request): Promise<UserDoc> {
   const { firebaseUid, email, displayName } = req.user!;
-  return User.findOneAndUpdate(
+  const user = await User.findOneAndUpdate(
     { firebaseUid },
     {
       $set: {
@@ -15,6 +16,8 @@ export async function resolveUser(req: Request) {
         displayName: displayName ?? null,
       },
     },
-    { upsert: true, new: true },
+    { upsert: true },
   ).exec();
+  if (!user) throw unauthorizedError('Failed to sync user');
+  return user;
 }

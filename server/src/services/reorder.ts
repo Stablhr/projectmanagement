@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import type { Model } from '../db/fileStore';
 
 /**
  * Positions are spaced at 1024. New items are appended after the last sibling.
@@ -6,19 +6,16 @@ import { Model } from 'mongoose';
  */
 
 export async function nextPosition(
-  Model: Model<any>,
+  model: Model,
   filter: Record<string, unknown>,
 ): Promise<number> {
-  const last = await Model.findOne(filter).sort({ position: -1 }).exec();
-  return (last?.position ?? 0) + 1024;
+  const last = await model.findOne(filter).sort({ position: -1 }).exec();
+  return ((last?.position as number | undefined) ?? 0) + 1024;
 }
 
-export async function applyOrder(
-  Model: Model<any>,
-  orderedIds: string[],
-): Promise<void> {
+export async function applyOrder(model: Model, orderedIds: string[]): Promise<void> {
   const ops = orderedIds.map((id, i) =>
-    Model.updateOne({ _id: id }, { $set: { position: (i + 1) * 1024 } }),
+    model.updateOne({ _id: id }, { $set: { position: (i + 1) * 1024 } }),
   );
   await Promise.all(ops);
 }

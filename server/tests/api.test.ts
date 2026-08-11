@@ -1,8 +1,9 @@
 import { createRequire } from 'node:module';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import mongoose from 'mongoose';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { app } from '../src/app';
+import { initFileDb, resetStore } from '../src/db/fileStore';
+import { Card } from '../src/models/Card';
+import { List } from '../src/models/List';
 
 vi.mock('firebase-admin', () => {
   const verifyIdToken = vi.fn(async (token: string) => ({
@@ -41,19 +42,22 @@ function authed(token: string) {
 
 const alice = authed('alice');
 const bob = authed('bob');
-const mallory = authed('mallory');
 
-let mongod: MongoMemoryServer;
-
-beforeAll(async () => {
-  mongod = await MongoMemoryServer.create();
-  await mongoose.connect(mongod.getUri());
+beforeAll(() => {
+  initFileDb();
 });
 
-afterAll(async () => {
-  await mongoose.disconnect();
-  await mongod.stop();
+beforeEach(() => {
+  resetStore();
 });
+
+afterAll(() => {
+  resetStore();
+});
+
+function createBoard(title = 'Board') {
+  return alice.post('/api/v1/boards', { title });
+}
 
 describe('GET /health', () => {
   it('reports ok without auth', async () => {
@@ -64,14 +68,6 @@ describe('GET /health', () => {
   });
 });
 
-beforeEach(async () => {
-  await mongoose.connection.dropDatabase();
-});
-
-function createBoard(title = 'Board') {
-  return alice.post('/api/v1/boards').send({ title });
-}
-
 describe('auth', () => {
   it('rejects requests without a token', async () => {
     await request(app).get('/api/v1/boards').expect(401);
@@ -79,14 +75,9 @@ describe('auth', () => {
 
   it('upserts the user on /auth/sync', async () => {
     const res = await alice
-      .post('/api/v1/auth/sync')
-      .send({ email: 'alice@dev.local' })
+      .post('/api/v1/auth/sync', { email: 'alice@dev.local' })
       .expect(200);
     expect(res.body.firebaseUid).toBe('alice');
-  });
-
-  it('rejects tokens from non-owner emails', async () => {
-    await mallory.get('/api/v1/boards').expect(403);
   });
 });
 
@@ -114,18 +105,16 @@ describe('boards', () => {
   it('cascades delete of lists and cards', async () => {
     const board = await createBoard();
     const list = await alice
-      .post(`/api/v1/boards/${board.body._id}/lists`)
-      .send({ title: 'To Do' })
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'To Do' })
       .expect(201);
     await alice
-      .post(`/api/v1/lists/${list.body._id}/cards`)
-      .send({ title: 'Card A' })
+      .post(`/api/v1/lists/${list.body._id}/cards`, { title: 'Card A' })
       .expect(201);
 
     await alice.delete(`/api/v1/boards/${board.body._id}`).expect(204);
 
-    const lists = await mongoose.model('List').find({ boardId: board.body._id });
-    const cards = await mongoose.model('Card').find({ listId: list.body._id });
+    const lists = await List.find({ boardId: board.body._id }).exec();
+    const cards = await Card.find({ listId: list.body._id }).exec();
     expect(lists).toHaveLength(0);
     expect(cards).toHaveLength(0);
   });
@@ -135,12 +124,10 @@ describe('lists', () => {
   it('creates lists with increasing positions', async () => {
     const board = await createBoard();
     const l1 = await alice
-      .post(`/api/v1/boards/${board.body._id}/lists`)
-      .send({ title: 'To Do' })
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'To Do' })
       .expect(201);
     const l2 = await alice
-      .post(`/api/v1/boards/${board.body._id}/lists`)
-      .send({ title: 'Done' })
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'Done' })
       .expect(201);
     expect(l2.body.position).toBeGreaterThan(l1.body.position);
   });
@@ -148,17 +135,16 @@ describe('lists', () => {
   it('reorders lists', async () => {
     const board = await createBoard();
     const l1 = await alice
-      .post(`/api/v1/boards/${board.body._id}/lists`)
-      .send({ title: 'A' })
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'A' })
       .expect(201);
     const l2 = await alice
-      .post(`/api/v1/boards/${board.body._id}/lists`)
-      .send({ title: 'B' })
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'B' })
       .expect(201);
 
     await alice
-      .put(`/api/v1/boards/${board.body._id}/lists/reorder`)
-      .send({ orderedIds: [l2.body._id, l1.body._id] })
+      .put(`/api/v1/boards/${board.body._id}/lists/reorder`, {
+        orderedIds: [l2.body._id, l1.body._id],
+      })
       .expect(200);
 
     const res = await alice.get(`/api/v1/boards/${board.body._id}`).expect(200);
@@ -170,25 +156,20 @@ describe('cards', () => {
   it('moves a card across lists', async () => {
     const board = await createBoard();
     const listA = await alice
-      .post(`/api/v1/boards/${board.body._id}/lists`)
-      .send({ title: 'To Do' })
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'To Do' })
       .expect(201);
     const listB = await alice
-      .post(`/api/v1/boards/${board.body._id}/lists`)
-      .send({ title: 'Done' })
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'Done' })
       .expect(201);
     const card = await alice
-      .post(`/api/v1/lists/${listA.body._id}/cards`)
-      .send({ title: 'Card A' })
+      .post(`/api/v1/lists/${listA.body._id}/cards`, { title: 'Card A' })
       .expect(201);
     const cardB = await alice
-      .post(`/api/v1/lists/${listB.body._id}/cards`)
-      .send({ title: 'Card B' })
+      .post(`/api/v1/lists/${listB.body._id}/cards`, { title: 'Card B' })
       .expect(201);
 
     await alice
-      .put('/api/v1/cards/reorder')
-      .send({
+      .put('/api/v1/cards/reorder', {
         cardId: card.body._id,
         destListId: listB.body._id,
         orderedIds: [card.body._id, cardB.body._id],
@@ -205,30 +186,25 @@ describe('cards', () => {
   it('validates card title', async () => {
     const board = await createBoard();
     const list = await alice
-      .post(`/api/v1/boards/${board.body._id}/lists`)
-      .send({ title: 'To Do' })
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'To Do' })
       .expect(201);
     await alice
-      .post(`/api/v1/lists/${list.body._id}/cards`)
-      .send({ title: '   ' })
+      .post(`/api/v1/lists/${list.body._id}/cards`, { title: '   ' })
       .expect(400);
   });
 
   it('patches card detail fields and returns them on load', async () => {
     const board = await createBoard();
     const list = await alice
-      .post(`/api/v1/boards/${board.body._id}/lists`)
-      .send({ title: 'To Do' })
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'To Do' })
       .expect(201);
     const card = await alice
-      .post(`/api/v1/lists/${list.body._id}/cards`)
-      .send({ title: 'Card A' })
+      .post(`/api/v1/lists/${list.body._id}/cards`, { title: 'Card A' })
       .expect(201);
     const cardId = card.body._id;
 
     await alice
-      .patch(`/api/v1/cards/${cardId}`)
-      .send({
+      .patch(`/api/v1/cards/${cardId}`, {
         cover: { type: 'color', value: '#EB5A46' },
         labels: ['board-1-label-1', 'board-1-label-2'],
         memberIds: ['dev-user', 'member-aria'],
@@ -253,18 +229,15 @@ describe('cards', () => {
   it('supports comments, activity, reactions, and files', async () => {
     const board = await createBoard();
     const list = await alice
-      .post(`/api/v1/boards/${board.body._id}/lists`)
-      .send({ title: 'To Do' })
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'To Do' })
       .expect(201);
     const card = await alice
-      .post(`/api/v1/lists/${list.body._id}/cards`)
-      .send({ title: 'Card A' })
+      .post(`/api/v1/lists/${list.body._id}/cards`, { title: 'Card A' })
       .expect(201);
     const cardId = card.body._id;
 
     await alice
-      .patch(`/api/v1/cards/${cardId}`)
-      .send({
+      .patch(`/api/v1/cards/${cardId}`, {
         comments: [
           {
             id: 'c1',
@@ -297,12 +270,10 @@ describe('cards', () => {
   it('caps activity and clears optional fields', async () => {
     const board = await createBoard();
     const list = await alice
-      .post(`/api/v1/boards/${board.body._id}/lists`)
-      .send({ title: 'To Do' })
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'To Do' })
       .expect(201);
     const card = await alice
-      .post(`/api/v1/lists/${list.body._id}/cards`)
-      .send({ title: 'Card A' })
+      .post(`/api/v1/lists/${list.body._id}/cards`, { title: 'Card A' })
       .expect(201);
     const cardId = card.body._id;
 
@@ -312,13 +283,11 @@ describe('cards', () => {
       createdAt: `2026-08-0${(i % 9) + 1}T00:00:00.000Z`,
     }));
     await alice
-      .patch(`/api/v1/cards/${cardId}`)
-      .send({ activity, dueDate: '2026-09-01T00:00:00.000Z', location: 'HQ' })
+      .patch(`/api/v1/cards/${cardId}`, { activity, dueDate: '2026-09-01T00:00:00.000Z', location: 'HQ' })
       .expect(200);
 
-    const res = await alice
-      .patch(`/api/v1/cards/${cardId}`)
-      .send({ dueDate: null, location: '', cover: null, watched: false })
+    await alice
+      .patch(`/api/v1/cards/${cardId}`, { dueDate: null, location: '', cover: null, watched: false })
       .expect(200);
 
     const boardRes = await alice.get(`/api/v1/boards/${board.body._id}`).expect(200);

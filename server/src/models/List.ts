@@ -1,15 +1,9 @@
-import { Schema, model, HydratedDocument, InferSchemaType } from 'mongoose';
+import { createModel, type StoreDoc } from '../db/fileStore';
 
-const listSchema = new Schema(
-  {
-    boardId: { type: Schema.Types.ObjectId, ref: 'Board', required: true },
-    title: { type: String, required: true, trim: true, maxlength: 200 },
-    position: { type: Number, required: true },
-  },
-  { timestamps: true },
-);
+export interface ListDoc extends StoreDoc {
+  boardId: string;
+  title: string;
+  position: number;
+}
 
-listSchema.index({ boardId: 1, position: 1 });
-
-export type ListDoc = HydratedDocument<InferSchemaType<typeof listSchema>>;
-export const List = model('List', listSchema);
+export const List = createModel<ListDoc>('lists');

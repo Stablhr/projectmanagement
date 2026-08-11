@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Router } from 'express';
 import { auth } from '../middleware/auth';
-import { Card } from '../models/Card';
+import { Card, type CardActivityEntry, type CardComment, type CardFile } from '../models/Card';
 import { List } from '../models/List';
 import { assertMember } from '../services/boardAccess';
 import { resolveUser } from '../services/userContext';
@@ -21,7 +21,7 @@ function str(v: unknown, max = 2000): string {
   return String(v ?? '').slice(0, max);
 }
 
-function normalizeFile(f: unknown) {
+function normalizeFile(f: unknown): CardFile {
   const file = (f ?? {}) as Record<string, unknown>;
   return {
     id: str(file.id, 100) || uid(),
@@ -33,7 +33,7 @@ function normalizeFile(f: unknown) {
   };
 }
 
-function normalizeComment(c: unknown) {
+function normalizeComment(c: unknown): CardComment {
   const comment = (c ?? {}) as Record<string, unknown>;
   return {
     id: str(comment.id, 100) || uid(),
@@ -44,7 +44,7 @@ function normalizeComment(c: unknown) {
   };
 }
 
-function normalizeActivity(a: unknown) {
+function normalizeActivity(a: unknown): CardActivityEntry {
   const entry = (a ?? {}) as Record<string, unknown>;
   return {
     id: str(entry.id, 100) || uid(),
@@ -53,14 +53,14 @@ function normalizeActivity(a: unknown) {
   };
 }
 
-function sanitizeReactions(reactions: unknown): Map<string, string[]> {
-  const map = new Map<string, string[]>();
+function sanitizeReactions(reactions: unknown): Record<string, string[]> {
+  const result: Record<string, string[]> = {};
   if (reactions && typeof reactions === 'object') {
     for (const [emoji, ids] of Object.entries(reactions as Record<string, unknown>)) {
-      if (Array.isArray(ids)) map.set(emoji, ids.map(String).slice(0, 100));
+      if (Array.isArray(ids)) result[emoji] = ids.map(String).slice(0, 100);
     }
   }
-  return map;
+  return result;
 }
 
 const router = Router();
@@ -133,20 +133,20 @@ router.patch('/cards/:id', async (req, res, next) => {
     }
     if (b.files !== undefined) {
       card.files = Array.isArray(b.files)
-        ? (b.files.slice(-MAX_FILES).map(normalizeFile) as any)
+        ? b.files.slice(-MAX_FILES).map(normalizeFile)
         : card.files;
     }
     if (b.reactions !== undefined) {
-      card.reactions = sanitizeReactions(b.reactions) as any;
+      card.reactions = sanitizeReactions(b.reactions);
     }
     if (b.comments !== undefined) {
       card.comments = Array.isArray(b.comments)
-        ? (b.comments.slice(-MAX_COMMENTS).map(normalizeComment) as any)
+        ? b.comments.slice(-MAX_COMMENTS).map(normalizeComment)
         : card.comments;
     }
     if (b.activity !== undefined) {
       card.activity = Array.isArray(b.activity)
-        ? (b.activity.slice(-MAX_ACTIVITY).map(normalizeActivity) as any)
+        ? b.activity.slice(-MAX_ACTIVITY).map(normalizeActivity)
         : card.activity;
     }
     if (b.watched !== undefined) {
@@ -199,7 +199,7 @@ router.put('/cards/reorder', async (req, res, next) => {
       return res.status(400).json({ error: { code: 'VALIDATION', message: 'cardId missing from orderedIds' } });
     }
 
-    card.listId = destList._id as any;
+    card.listId = destList._id;
     card.position = (idx + 1) * 1024;
     await card.save();
     await applyOrder(Card, orderedIds.map(String));

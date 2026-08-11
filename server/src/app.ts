@@ -1,6 +1,6 @@
 import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
-import mongoose from 'mongoose';
+import { store } from './db/fileStore';
 import { env } from './config/env';
 import { authRoutes } from './routes/auth';
 import { boardsRoutes } from './routes/boards';
@@ -20,10 +20,9 @@ app.use(
 app.use(express.json());
 
 app.get('/health', (_req: Request, res: Response) => {
-  const dbState = mongoose.connection.readyState;
   res.status(200).json({
     status: 'ok',
-    db: dbState === 1 ? 'connected' : 'disconnected',
+    db: store.status,
     uptime: Math.floor(process.uptime()),
   });
 });
@@ -40,9 +39,6 @@ app.use((req: Request, res: Response) => {
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ApiError) {
     return res.status(err.status).json(errorBody(err.code, err.message));
-  }
-  if (err instanceof mongoose.Error.ValidationError) {
-    return res.status(400).json(errorBody('VALIDATION', err.message));
   }
   const anyErr = err as { status?: number; code?: string; message?: string };
   if (anyErr.status && anyErr.code) {
