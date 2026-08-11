@@ -35,11 +35,12 @@ export function Card({ card, onOpen }: CardProps) {
     .filter((m): m is NonNullable<typeof m> => Boolean(m));
   const urgency = dueUrgency(card.dueDate);
   const commentCount = card.comments?.length ?? 0;
-  const attachmentCount = card.files?.length ?? 0;
+  const imageFiles = (card.files ?? []).filter((f) => f.kind === 'image');
+  const fileCount = (card.files ?? []).filter((f) => f.kind !== 'image').length;
 
   const hasMeta =
     commentCount > 0 ||
-    attachmentCount > 0 ||
+    fileCount > 0 ||
     Boolean(card.watched) ||
     Boolean(card.dueDate) ||
     cardMembers.length > 0;
@@ -104,6 +105,25 @@ export function Card({ card, onOpen }: CardProps) {
           <p className="mt-1 line-clamp-2 text-xs text-ink-secondary">{card.description}</p>
         )}
 
+        {imageFiles.length > 0 && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {imageFiles.slice(0, 4).map((file) => (
+              <img
+                key={file.id}
+                src={file.url}
+                alt={file.name}
+                loading="lazy"
+                className="h-14 w-14 rounded-md border border-line object-cover"
+              />
+            ))}
+            {imageFiles.length > 4 && (
+              <span className="flex h-14 w-14 items-center justify-center rounded-md border border-line bg-ink/5 text-xs font-semibold text-ink-secondary">
+                +{imageFiles.length - 4}
+              </span>
+            )}
+          </div>
+        )}
+
         {hasMeta && (
           <div className="mt-2 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5">
@@ -124,10 +144,10 @@ export function Card({ card, onOpen }: CardProps) {
                   {commentCount}
                 </span>
               )}
-              {attachmentCount > 0 && (
+              {fileCount > 0 && (
                 <span className="inline-flex items-center gap-1 text-[11px] text-ink-secondary">
                   <Paperclip className="h-3 w-3" />
-                  {attachmentCount}
+                  {fileCount}
                 </span>
               )}
             </div>

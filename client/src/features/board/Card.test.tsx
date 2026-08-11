@@ -130,7 +130,10 @@ describe('Card visual details', () => {
       </BoardStateProvider>,
     );
     expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('1')).toBeInTheDocument();
+    const thumb = screen.getByAltText('mock.png') as HTMLImageElement;
+    expect(thumb).toBeInTheDocument();
+    expect(thumb.src).toContain('mock.png');
   });
 
   it('shows a watch indicator when the card is watched', () => {
