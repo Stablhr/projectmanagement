@@ -275,14 +275,14 @@ export function CardModal({ boardId, card, onClose }: CardModalProps) {
   }
 
   async function handleFiles(event: ChangeEvent<HTMLInputElement>) {
-    const selected = event.target.files;
+    const picked = event.target.files ? Array.from(event.target.files) : [];
     event.target.value = '';
-    if (!selected || selected.length === 0) return;
+    if (picked.length === 0) return;
     setUploading(true);
     setUploadError(null);
     try {
       const uploaded: CardFile[] = [];
-      for (const file of Array.from(selected)) {
+      for (const file of picked) {
         uploaded.push(await uploadAttachment(card._id, file));
       }
       const files = [...draft.files, ...uploaded];
