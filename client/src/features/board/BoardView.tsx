@@ -1,6 +1,9 @@
 import {
   closestCorners,
+  defaultDropAnimationSideEffects,
   DndContext,
+  DragOverlay,
+  MeasuringStrategy,
   PointerSensor,
   useSensor,
   useSensors,
@@ -22,6 +25,7 @@ import { ME_ID } from './boardData';
 import { BoardStateProvider, useBoardState } from './boardContext';
 import { BoardHeader } from './BoardHeader';
 import { CardModal } from './CardModal';
+import { CardVisual } from './Card';
 import { filterCards } from './filterBoard';
 import { List } from './List';
 import { listOrder, moveCardInCache, reorderListsInCache } from './reorderUtils';
@@ -85,6 +89,7 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
   const reorderCards = useReorderCards(boardId);
 
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [dragCard, setDragCard] = useState<CardType | null>(null);
   const snapshotRef = useRef<BoardDetail | null>(null);
   const [openCardId, setOpenCardId] = useState<string | null>(null);
   const openCard = openCardId
@@ -133,6 +138,11 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
       id: String(event.active.id),
       currentListId: activeData.listId ?? '',
     });
+    setDragCard(
+      activeData.type === 'card'
+        ? (boardData?.cards.find((c) => c._id === String(event.active.id)) ?? null)
+        : null,
+    );
   }
 
   function onDragOver(event: DragOverEvent) {
@@ -191,6 +201,7 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
     }
 
     setDragState(null);
+    setDragCard(null);
     snapshotRef.current = null;
   }
 
@@ -199,6 +210,7 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
       queryClient.setQueryData(['board', boardId], snapshotRef.current);
     }
     setDragState(null);
+    setDragCard(null);
     snapshotRef.current = null;
   }
 
@@ -234,6 +246,9 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
+          measuring={{
+            droppable: { strategy: MeasuringStrategy.WhileDragging },
+          }}
           onDragStart={onDragStart}
           onDragOver={onDragOver}
           onDragEnd={onDragEnd}
@@ -290,6 +305,20 @@ function BoardShell({ boardId, board }: { boardId: string; board: BoardDetail })
               </div>
             </div>
           </SortableContext>
+
+          <DragOverlay
+            dropAnimation={{
+              duration: 220,
+              easing: 'cubic-bezier(0.2, 0.8, 0.4, 1)',
+              sideEffects: defaultDropAnimationSideEffects({
+                styles: { active: { opacity: '0' } },
+              }),
+            }}
+          >
+            {dragState?.type === 'card' && dragCard ? (
+              <CardVisual card={dragCard} isOverlay />
+            ) : null}
+          </DragOverlay>
         </DndContext>
 
         {lists.length === 0 && (

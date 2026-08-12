@@ -1,6 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { clsx } from 'clsx';
+import { forwardRef, type CSSProperties, type HTMLAttributes } from 'react';
 import { CheckCircle2, Clock, Eye, MessageSquare, Paperclip } from 'lucide-react';
 import type { Card as CardType } from '../../lib/types';
 import { AvatarStack } from '../../components/ui/Avatar';
@@ -12,20 +13,30 @@ interface CardProps {
   onOpen: (card: CardType) => void;
 }
 
-export function Card({ card, onOpen }: CardProps) {
-  const { labels, members } = useBoardState();
+interface CardVisualProps {
+  card: CardType;
+  /** Optional: when omitted the card is rendered non-interactively (e.g. drag overlay). */
+  onOpen?: (card: CardType) => void;
+  className?: string;
+  style?: CSSProperties;
+  /** While dragging the in-place card acts as an invisible placeholder. */
+  isDragging?: boolean;
+  /** Rendered floating above the board inside a DragOverlay. */
+  isOverlay?: boolean;
+}
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: card._id,
-    data: { type: 'card', cardId: card._id, listId: card.listId },
-  });
+/**
+ * Presentational card. Used both for the in-list sortable item and for the
+ * floating drag overlay, so the dragged card looks identical wherever it is.
+ */
+export const CardVisual = forwardRef<
+  HTMLDivElement,
+  CardVisualProps & HTMLAttributes<HTMLDivElement>
+>(function CardVisual(
+  { card, onOpen, className, style, isDragging, isOverlay, ...rest },
+  ref,
+) {
+  const { labels, members } = useBoardState();
 
   const cardLabels = (card.labels ?? [])
     .map((id) => labels.find((l) => l.id === id))
@@ -47,22 +58,33 @@ export function Card({ card, onOpen }: CardProps) {
 
   return (
     <div
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={clsx(
-        'group w-full cursor-pointer overflow-hidden rounded-lg border border-line bg-surface text-left shadow-sm',
-        'transition-shadow hover:border-primary-300 hover:shadow',
-        isDragging && 'z-10 shadow-lg ring-2 ring-primary-400',
-      )}
-      onClick={() => onOpen(card)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onOpen(card);
-        }
+      ref={ref}
+      style={{
+        ...style,
+        // `scale` is a separate CSS property from `transform`, so it composes
+        // with the transform dnd-kit applies to the overlay without conflicts.
+        ...(isOverlay ? { scale: '1.04' } : null),
       }}
-      {...attributes}
-      {...listeners}
+      className={clsx(
+        'group w-full overflow-hidden rounded-lg border border-line bg-surface text-left shadow-sm',
+        'transition-shadow hover:border-primary-300 hover:shadow',
+        isDragging && 'opacity-0',
+        isOverlay &&
+          'pointer-events-none select-none cursor-grabbing shadow-2xl ring-2 ring-primary-400/70',
+        className,
+      )}
+      onClick={onOpen ? () => onOpen(card) : undefined}
+      onKeyDown={
+        onOpen
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onOpen(card);
+              }
+            }
+          : undefined
+      }
+      {...rest}
     >
       {card.cover && (
         <div
@@ -164,6 +186,38 @@ export function Card({ card, onOpen }: CardProps) {
         )}
       </div>
     </div>
+  );
+});
+
+/** Sortable wrapper used inside a list. */
+export function Card({ card, onOpen }: CardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: card._id,
+    data: { type: 'card', cardId: card._id, listId: card.listId },
+  });
+
+  return (
+    <CardVisual
+      ref={setNodeRef}
+      card={card}
+      onOpen={onOpen}
+      isDragging={isDragging}
+      style={{
+        // While dragging, keep the placeholder pinned to its slot instead of
+        // following the pointer — the DragOverlay provides the visual drag.
+        transform: isDragging ? undefined : CSS.Transform.toString(transform),
+        transition,
+      }}
+      {...attributes}
+      {...listeners}
+    />
   );
 }
 
