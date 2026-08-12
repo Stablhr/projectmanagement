@@ -1,10 +1,12 @@
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  getRedirectResult,
   onAuthStateChanged,
   onIdTokenChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut as firebaseSignOut,
 } from 'firebase/auth';
 import {
@@ -37,6 +39,17 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+/** True when the Google popup was blocked or COOP made it unreliable. */
+function isPopupBlocked(error: unknown): boolean {
+  const err = error as { code?: string; message?: string } | undefined;
+  if (!err) return false;
+  return (
+    err.code === 'auth/popup-blocked' ||
+    err.code === 'auth/cancelled-popup-request' ||
+    err.message?.includes('Cross-Origin-Opener-Policy') === true
+  );
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -92,6 +105,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [syncUser]);
 
   useEffect(() => {
+    if (useDevAuth || !isFirebaseConfigured || !auth) return;
+    // Completes a pending signInWithRedirect flow after the OAuth provider
+    // bounces the user back to this page (the popup fallback / alternative).
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (!result?.user) return;
+        if (!isOwnerEmail(result.user.email)) {
+          await firebaseSignOut(auth!);
+          return;
+        }
+        await syncUser({
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName,
+        });
+      })
+      .catch(() => {
+        // Redirect aborted or failed (e.g. user cancelled). onAuthStateChanged
+        // settles the real auth state, so there is nothing to do here.
+      });
+  }, [syncUser]);
+
+  useEffect(() => {
     if (!auth || useDevAuth) return;
     const unsubscribe = onIdTokenChanged(auth, () => {
       // keeps the token getter fresh via user state
@@ -124,10 +160,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = useCallback(async () => {
     if (requireFirebase()) return;
-    const result = await signInWithPopup(auth!, new GoogleAuthProvider());
-    if (!isOwnerEmail(result.user.email)) {
-      await firebaseSignOut(auth!);
-      throw new Error('This Google account is not authorized.');
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth!, provider);
+      if (!isOwnerEmail(result.user.email)) {
+        await firebaseSignOut(auth!);
+        throw new Error('This Google account is not authorized.');
+      }
+    } catch (error) {
+      if (isPopupBlocked(error)) {
+        // Popup is blocked or unreliable in this environment — complete the
+        // sign-in with a full-page redirect instead. The page reloads after
+        // OAuth and getRedirectResult finishes the flow.
+        await signInWithRedirect(auth!, provider);
+        return;
+      }
+      throw error;
     }
   }, []);
 
