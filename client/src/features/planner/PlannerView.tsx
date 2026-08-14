@@ -1,5 +1,6 @@
-import { useQueries } from '@tanstack/react-query';
-import { CalendarClock, Clock } from 'lucide-react';
+import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
+import { clsx } from 'clsx';
+import { CalendarClock, CheckCircle2, Clock } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
@@ -57,7 +58,16 @@ interface ScheduledCard {
 }
 
 export function PlannerView() {
+  const queryClient = useQueryClient();
   const { data: boards = [], isLoading: loadingBoards } = useBoards();
+
+  const toggleDone = useMutation({
+    mutationFn: ({ cardId, complete }: { cardId: string; complete: boolean }) =>
+      api.patch<Card>(`/cards/${cardId}`, { complete }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['board'] });
+    },
+  });
 
   const details = useQueries({
     queries: boards.map((b) => ({
@@ -137,34 +147,53 @@ export function PlannerView() {
   const hasAnything = scheduled.size > 0 || unscheduled.length > 0;
 
   function CardRow({ entry }: { entry: ScheduledCard }) {
+    const done = Boolean(entry.card.complete);
     return (
-      <Link
-        to={`/board/${entry.boardId}`}
-        className="flex items-center gap-3 rounded-lg border border-line bg-surface px-3 py-2.5 shadow-sm transition-colors hover:border-primary-300 hover:bg-canvas"
-      >
-        <span
-          className="h-2.5 w-2.5 shrink-0 rounded-full"
-          style={{ backgroundColor: swatchFor(entry.boardTitle) }}
-        />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium text-ink">{entry.card.title}</span>
-          <span className="block truncate text-xs text-ink-secondary">
-            {entry.boardTitle}
-            {entry.listTitle ? ` · ${entry.listTitle}` : ''}
+      <div className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2.5 shadow-sm transition-colors hover:border-primary-300 hover:bg-canvas">
+        <Link
+          to={`/board/${entry.boardId}`}
+          className="flex min-w-0 flex-1 items-center gap-3"
+        >
+          <span
+            className="h-2.5 w-2.5 shrink-0 rounded-full"
+            style={{ backgroundColor: swatchFor(entry.boardTitle) }}
+          />
+          <span className="min-w-0 flex-1">
+            <span
+              className={clsx(
+                'block truncate text-sm font-medium',
+                done ? 'text-ink-secondary line-through' : 'text-ink',
+              )}
+            >
+              {entry.card.title}
+            </span>
+            <span className="block truncate text-xs text-ink-secondary">
+              {entry.boardTitle}
+              {entry.listTitle ? ` · ${entry.listTitle}` : ''}
+            </span>
           </span>
-        </span>
-        {entry.card.complete && (
-          <span className="shrink-0 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
-            Done
-          </span>
-        )}
-        {entry.card.dueDate && formatDueTime(entry.card.dueDate) && (
-          <span className="inline-flex shrink-0 items-center gap-1 text-xs tabular text-ink-secondary">
-            <Clock className="h-3 w-3" />
-            {formatDueTime(entry.card.dueDate)}
-          </span>
-        )}
-      </Link>
+          {entry.card.dueDate && formatDueTime(entry.card.dueDate) && (
+            <span className="inline-flex shrink-0 items-center gap-1 text-xs tabular text-ink-secondary">
+              <Clock className="h-3 w-3" />
+              {formatDueTime(entry.card.dueDate)}
+            </span>
+          )}
+        </Link>
+        <button
+          onClick={() => toggleDone.mutate({ cardId: entry.card._id, complete: !done })}
+          aria-label={done ? `Mark "${entry.card.title}" as not done` : `Mark "${entry.card.title}" as done`}
+          title={done ? 'Mark as not done' : 'Mark as done'}
+          className={clsx(
+            'inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors',
+            done
+              ? 'border-success/30 bg-success/10 text-success hover:bg-success/20'
+              : 'border-line text-ink-secondary hover:border-success/40 hover:text-success',
+          )}
+        >
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          {done ? 'Done' : 'Mark done'}
+        </button>
+      </div>
     );
   }
 
