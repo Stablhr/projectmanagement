@@ -552,30 +552,45 @@ export function CardModal({ boardId, card, onClose }: CardModalProps) {
             </div>
             {uploadError && <p className="mt-1.5 text-xs text-danger">{uploadError}</p>}
             {draft.files.length > 0 && (
-              <ul className="mt-2 space-y-1.5">
+              <ul className="mt-2 space-y-2">
                 {draft.files.map((file) => (
-                  <li key={file.id} className="flex items-center gap-2">
-                    {file.kind === 'image' ? (
-                      <ImageIcon className="h-4 w-4 shrink-0 text-ink-secondary" />
-                    ) : (
-                      <FileText className="h-4 w-4 shrink-0 text-ink-secondary" />
+                  <li key={file.id} className="min-w-0">
+                    {file.kind === 'image' && (
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block overflow-hidden rounded-lg border border-line"
+                      >
+                        <img
+                          src={file.url}
+                          alt={file.name}
+                          loading="lazy"
+                          className="h-56 w-full object-cover"
+                        />
+                      </a>
                     )}
-                    <a
-                      href={file.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="min-w-0 flex-1 truncate text-sm text-primary-800 hover:underline"
-                      title={file.name}
-                    >
-                      {file.name}
-                    </a>
-                    <button
-                      onClick={() => removeFile(file.id)}
-                      aria-label={`Remove ${file.name}`}
-                      className="rounded p-1 text-ink-secondary hover:bg-canvas hover:text-danger"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
+                    <div className={clsx('flex min-w-0 items-center gap-2', file.kind === 'image' && 'mt-1.5')}>
+                      {file.kind === 'file' && (
+                        <FileText className="h-4 w-4 shrink-0 text-ink-secondary" />
+                      )}
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="min-w-0 flex-1 truncate text-sm text-primary-800 hover:underline"
+                        title={file.name}
+                      >
+                        {file.name}
+                      </a>
+                      <button
+                        onClick={() => removeFile(file.id)}
+                        aria-label={`Remove ${file.name}`}
+                        className="rounded p-1 text-ink-secondary hover:bg-canvas hover:text-danger"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
