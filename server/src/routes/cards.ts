@@ -153,7 +153,13 @@ router.patch('/cards/:id', async (req, res, next) => {
       card.watched = Boolean(b.watched);
     }
     if (b.complete !== undefined) {
+      const wasComplete = Boolean(card.complete);
       card.complete = Boolean(b.complete);
+      if (card.complete && !wasComplete) {
+        card.completedAt = new Date().toISOString();
+      } else if (!card.complete) {
+        card.completedAt = null;
+      }
     }
     await card.save();
     emitToBoard(req, String(list.boardId), 'card:updated', { card });

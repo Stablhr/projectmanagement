@@ -44,6 +44,7 @@ export interface CardDoc extends StoreDoc {
   activity: CardActivityEntry[];
   watched: boolean;
   complete: boolean;
+  completedAt: string | Date | null;
 }
 
 export const Card = createModel<CardDoc>('cards');

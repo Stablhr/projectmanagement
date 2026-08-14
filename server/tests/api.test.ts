@@ -4,6 +4,7 @@ import { app } from '../src/app';
 import { initFileDb, resetStore } from '../src/db/fileStore';
 import { Card } from '../src/models/Card';
 import { List } from '../src/models/List';
+import { purgeExpiredCompleted } from '../src/services/cleanupCompleted';
 
 vi.mock('firebase-admin', () => {
   const verifyIdToken = vi.fn(async (token: string) => ({
@@ -297,5 +298,97 @@ describe('cards', () => {
     expect(updated.location).toBe('');
     expect(updated.cover).toBeNull();
     expect(updated.watched).toBe(false);
+  });
+});
+
+describe('completed cards auto-delete after 1 day', () => {
+  it('records completedAt when marked done and clears it when reopened', async () => {
+    const board = await createBoard();
+    const list = await alice
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'To Do' })
+      .expect(201);
+    const card = await alice
+      .post(`/api/v1/lists/${list.body._id}/cards`, { title: 'Card A' })
+      .expect(201);
+    const cardId = card.body._id;
+
+    const done = await alice.patch(`/api/v1/cards/${cardId}`, { complete: true }).expect(200);
+    expect(done.body.complete).toBe(true);
+    expect(done.body.completedAt).toBeDefined();
+
+    const reopened = await alice.patch(`/api/v1/cards/${cardId}`, { complete: false }).expect(200);
+    expect(reopened.body.complete).toBe(false);
+    expect(reopened.body.completedAt).toBeNull();
+  });
+
+  it('keeps completedAt when an already-done card is patched as done again', async () => {
+    const board = await createBoard();
+    const list = await alice
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'To Do' })
+      .expect(201);
+    const card = await alice
+      .post(`/api/v1/lists/${list.body._id}/cards`, { title: 'Card A' })
+      .expect(201);
+    const cardId = card.body._id;
+
+    await alice.patch(`/api/v1/cards/${cardId}`, { complete: true }).expect(200);
+    const again = await alice.patch(`/api/v1/cards/${cardId}`, { complete: true }).expect(200);
+    const boardRes = await alice.get(`/api/v1/boards/${board.body._id}`).expect(200);
+    const stored = boardRes.body.cards.find((c: any) => c._id === cardId);
+    expect(again.body.completedAt).toBe(stored.completedAt);
+  });
+
+  it('purges cards done more than 24h ago and keeps recent ones', async () => {
+    const board = await createBoard();
+    const list = await alice
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'To Do' })
+      .expect(201);
+    const listId = list.body._id;
+
+    const oldDone = await alice
+      .post(`/api/v1/lists/${listId}/cards`, { title: 'Old done' })
+      .expect(201);
+    const recentDone = await alice
+      .post(`/api/v1/lists/${listId}/cards`, { title: 'Recent done' })
+      .expect(201);
+    const open = await alice
+      .post(`/api/v1/lists/${listId}/cards`, { title: 'Open' })
+      .expect(201);
+
+    await alice.patch(`/api/v1/cards/${oldDone.body._id}`, { complete: true }).expect(200);
+    await alice.patch(`/api/v1/cards/${recentDone.body._id}`, { complete: true }).expect(200);
+
+    const old = await Card.findById(oldDone.body._id).exec();
+    const recent = await Card.findById(recentDone.body._id).exec();
+    old!.completedAt = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+    recent!.completedAt = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    await old!.save();
+    await recent!.save();
+
+    const result = await purgeExpiredCompleted();
+    expect(result.deleted).toBe(1);
+
+    expect(await Card.findById(oldDone.body._id).exec()).toBeNull();
+    expect(await Card.findById(recentDone.body._id).exec()).not.toBeNull();
+    expect(await Card.findById(open.body._id).exec()).not.toBeNull();
+  });
+
+  it('does not purge legacy done cards that have no completedAt', async () => {
+    const board = await createBoard();
+    const list = await alice
+      .post(`/api/v1/boards/${board.body._id}/lists`, { title: 'To Do' })
+      .expect(201);
+    const card = await alice
+      .post(`/api/v1/lists/${list.body._id}/cards`, { title: 'Legacy done' })
+      .expect(201);
+
+    const doc = await Card.findById(card.body._id).exec();
+    doc!.complete = true;
+    doc!.completedAt = null;
+    await doc!.save();
+
+    const result = await purgeExpiredCompleted();
+    expect(result.deleted).toBe(0);
+    expect(await Card.findById(card.body._id).exec()).not.toBeNull();
   });
 });

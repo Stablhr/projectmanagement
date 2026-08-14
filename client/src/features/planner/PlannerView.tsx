@@ -227,7 +227,8 @@ export function PlannerView() {
           <h1 className="text-2xl font-semibold tracking-tight text-ink">Planner</h1>
           <p className="mt-0.5 text-sm text-ink-secondary">
             Cards with a due date show up here so you can see what's coming. Cards without one
-            are listed under Not yet scheduled.
+            are listed under Not yet scheduled. Cards marked done are removed automatically
+            after 24 hours.
           </p>
         </div>
       </div>

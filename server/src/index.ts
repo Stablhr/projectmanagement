@@ -4,6 +4,7 @@ import { app } from './app';
 import { env } from './config/env';
 import { initFileDb } from './db/fileStore';
 import { setupSocket } from './realtime/socket';
+import { startCompletedCleanup } from './services/cleanupCompleted';
 
 async function main() {
   initFileDb();
@@ -17,6 +18,7 @@ async function main() {
   });
   app.set('io', io);
   setupSocket(io);
+  startCompletedCleanup(io);
 
   server.listen(env.port, () => {
     console.log(`[server] listening on http://localhost:${env.port}`);
